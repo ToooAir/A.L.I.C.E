@@ -1,0 +1,15 @@
+{
+  "name": "alice",
+  "version": "1.0.0",
+  "description": "discord bot for TVPC",
+  "main": "alice.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node alice.js"
+  },
+  "author": "ToooAir",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.3.1"
+  }
+}
