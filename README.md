@@ -1,6 +1,6 @@
 # A.L.I.C.E
-一個當初為了[台姬殿](https://discord.gg/tvpc)設計的機器人\n
-基於node.js跟discord.js所編寫\n
+一個當初為了[台姬殿](https://discord.gg/tvpc)設計的機器人
+基於node.js跟discord.js所編寫
 充滿大量寫死的UUID 不方便別人更改
 
 ## 主要功能
