@@ -9,15 +9,19 @@
 1. 關鍵字回覆
 
 ![reply](https://i.imgur.com/CBpNraV.gif)
+
 2. 身分組人數統計
 
 ![guild](https://i.imgur.com/gW28cFV.gif)
+
 3. 大規模訊息刪除
 
 ![clear](https://i.imgur.com/Ojmm4oB.gif)
+
 4. 給特定身分組的人 另一個身分組
 
 ![role](https://i.imgur.com/2TZrWWV.gif)
+
 5. 使用CSV做訊息量排序
 
 ![rank](https://i.imgur.com/fSDm2MU.gif)
