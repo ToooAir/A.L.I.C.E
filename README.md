@@ -1,14 +1,26 @@
 # A.L.I.C.E
 一個當初為了[台姬殿](https://discord.gg/tvpc)設計的機器人
+
 基於node.js跟discord.js所編寫
+
 充滿大量寫死的UUID 不方便別人更改
 
 ## 主要功能
 1. 關鍵字回覆
+![reply](https://i.imgur.com/CBpNraV.gif)
 2. 身分組人數統計
+![guild](https://i.imgur.com/gW28cFV.gif)
 3. 大規模訊息刪除
+![clear](https://i.imgur.com/Ojmm4oB.gif)
 4. 給特定身分組的人 另一個身分組
+![role](https://i.imgur.com/2TZrWWV.gif)
 5. 使用CSV做訊息量排序
+![rank](https://i.imgur.com/fSDm2MU.gif)
+
+## 次要功能
+1. 私下關心
+2. 備份刪除訊息
+3. 以Bot身分說話
 
 ## 可以優化的事項
 - [ ] 將不同伺服器的指令分開
