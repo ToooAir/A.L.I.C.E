@@ -279,7 +279,7 @@ function channelRank(msg){
                 await parse.forEach(channel =>{
                     if(channel[2].match(/\d{18}/)){
                         var getChannel = msg.guild.channels.cache.get(channel[2]);
-                        if(getChannel.parentID == '811570519216226304' ||  getChannel.parentID == '834359296183238716'){
+                        if(getChannel.parentID == '811570519216226304' ||  getChannel.parentID == '834359296183238716' || getChannel.parentID == '851355842367717376'){
                             childChannel.push(channel);
                         }
                     }
@@ -292,6 +292,10 @@ function channelRank(msg){
                 childChannel.forEach(async channel =>{
                     sendMessage += `第${count}名 ${channel[1]} : ${channel[5]}\n`;
                     count += 1;
+                    if(count == 30){
+                        msg.channel.send(sendMessage);
+                        sendMessage = ``;
+                    }
                 });
 
                 msg.channel.send(sendMessage);
