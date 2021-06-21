@@ -292,7 +292,7 @@ function channelRank(msg){
                 childChannel.forEach(async channel =>{
                     sendMessage += `第${count}名 ${channel[1]} : ${channel[5]}\n`;
                     count += 1;
-                    if(count == 30){
+                    if(count%30 == 0){
                         msg.channel.send(sendMessage);
                         sendMessage = ``;
                     }
