@@ -35,10 +35,18 @@ client.on('message', msg => {
 client.on('messageDelete', msg => {
 
     if(msg.content != ''){
+        
+        var memberId = '';
+        if(msg.member.id){
+            memberId = msg.member.id;
+        }else{
+            memberId = msg.author.id;
+        }
+
         const embed = new Discord.MessageEmbed()
         .setColor('#FF2D2D')
         .setAuthor(msg.author.tag, msg.author.avatarURL())
-        .setDescription(`🗑 <@!${msg.member.id}>在<#${msg.channel.id}>的訊息被刪除了\n${msg.content}`)
+        .setDescription(`🗑 <@!${memberId}>在<#${msg.channel.id}>的訊息被刪除了\n${msg.content}`)
 	    .setTimestamp()
         .setFooter('訊息ID：' +  msg.id);
 
