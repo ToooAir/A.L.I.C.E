@@ -116,6 +116,7 @@ function guildEmbed(guild){
             {name:'VTUBER', value: guild.roles.cache.get('785901109071839244').members.size ,inline: true},
             {name:'Vtuber準備中', value: guild.roles.cache.get('811930854401638411').members.size ,inline: true},
             {name:'Vtuber幕後', value: guild.roles.cache.get('811516908867551282').members.size ,inline: true},
+            {name:'Youtuber', value: guild.roles.cache.get('820228580666900481').members.size},
         )
 
     return embed;
