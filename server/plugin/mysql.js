@@ -61,7 +61,7 @@ function searchReply(input){
         pool.query("SELECT * FROM reply WHERE input LIKE ? or output LIKE ? ORDER BY id DESC", ['%'+[input]+'%','%'+[input]+'%'],
             function (err, results, fields) {
                 if (err) throw err;
-
+                else console.log('Selected ' + results.length + ' row(s).');
                 resolve(results);
             }
         );
