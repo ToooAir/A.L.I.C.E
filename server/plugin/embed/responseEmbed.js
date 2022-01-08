@@ -32,7 +32,6 @@ function replyHelp(){
             {name:'新增/修改回覆', value: prefixM + 'reply add [觸發關鍵字] [回覆內容]'},
             {name:'刪除回覆', value: prefixM + 'reply delete [觸發關鍵字]'},
             {name:'搜尋回覆', value: prefixM +'reply search [觸發關鍵字]'},
-            {name:'搜尋回覆', value: prefixM +'reply search [觸發關鍵字]'},
             {name:'隨機回覆內容', value: '將多個[回覆內容]用 ^ 來分開'},
             {name:'Tag 觸發訊息者', value: '在[回覆內容]裡加入 {m}'},
         )
