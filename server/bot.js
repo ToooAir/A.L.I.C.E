@@ -1,6 +1,6 @@
 'use strict';
 const Discord = require('discord.js');
-const client = new Discord.Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] });
+const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_PRESENCES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS"] });
 const {talk} = require('./plugin/talk');
 const {prefix} = require('./plugin/prefix');
 const config = require('./config');
@@ -19,7 +19,7 @@ client.on('ready', () => {
 
 
 // 訊息觸發
-client.on('message', msg => {
+client.on('messageCreate', msg => {
 
     if(msg.author.bot || msg.channel.type == 'dm') return;
 
@@ -45,13 +45,13 @@ client.on('messageDelete', msg => {
 
         const embed = new Discord.MessageEmbed()
         .setColor('#FF2D2D')
-        .setAuthor(msg.author.tag, msg.author.avatarURL())
+        .setAuthor({name:msg.author.tag, iconURL:msg.author.avatarURL()})
         .setDescription(`🗑 <@!${memberId}>在<#${msg.channel.id}>的訊息被刪除了\n${msg.content}`)
 	    .setTimestamp()
-        .setFooter('訊息ID：' +  msg.id);
+        .setFooter({text:'訊息ID：' +  msg.id});
 
         //保存刪除訊息的頻道
-        msg.guild.channels.cache.get('831071520348569620').send(embed);
+        msg.guild.channels.cache.get('831071520348569620').send({embeds:[embed]});
 
     }
     

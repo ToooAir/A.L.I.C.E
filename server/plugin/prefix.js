@@ -15,7 +15,7 @@ function prefix(msg) {
 
     switch(command.toLowerCase()){
         case 'help':
-            msg.channel.send(help());
+            msg.channel.send({embeds:[help()]});
             break;
         case 'reply':
             reply(msg, args);
@@ -48,8 +48,7 @@ function prefix(msg) {
 
 function reply(msg,args){
     if(args.length < 1){
-        msg.reply('連神聖語都念不好的孩子呢......');
-        msg.channel.send(replyHelp());
+        msg.reply({content:'連神聖語都念不好的孩子呢......', embeds:[replyHelp()]});
         return;
     }
 
@@ -60,8 +59,7 @@ function reply(msg,args){
     switch(action.toLowerCase()){
         case 'add':
 	    if(args.length < 2 || input === ''){
-                msg.reply('這個神聖語的參數不完整呢');
-                msg.channel.send(replyHelp());
+                msg.reply({content:'這個神聖語的參數不完整呢', embeds:[replyHelp()]});
                 return;
             };
 
@@ -78,13 +76,13 @@ function reply(msg,args){
                         updateReply(input,output)
                         .then(function(){
                             const embed = replyUpdate(input,output,msg.author);
-                            msg.reply(embed);
+                            msg.reply({embeds:[embed]});
                         })
                     }else{
                         createReply(input,output)
                         .then(function(){
                             const embed = replyAdd(input,output,msg.author);
-                            msg.reply(embed);
+                            msg.reply({embeds:[embed]});
                         })
                     }
                 });
@@ -94,7 +92,7 @@ function reply(msg,args){
             deleteReply(input)
                 .then(function(){
                     const embed = replyDelete(input,msg.author);
-                    msg.reply(embed);
+                    msg.reply({embeds:[embed]});
                 });
             break;
 
@@ -105,8 +103,7 @@ function reply(msg,args){
                 });
             break;
         default:
-            msg.reply('你的神聖語是不是念錯了?');
-            msg.channel.send(replyHelp());
+            msg.reply({content:'你的神聖語是不是念錯了?', embeds:[replyHelp()]});
     }
 
 }
@@ -144,7 +141,7 @@ async function clear(msg,args){
                     msg.channel.bulkDelete(checkmessage);
                 })
             }while(stop == false);
-            msg.reply(`總共刪除了${number}則訊息`);
+            msg.reply(`總共刪除了${number}則訊息`.toString());
         }
 
     }else{
@@ -159,7 +156,7 @@ function broadcast(msg,args){
         return;
     }
 
-    if(msg.member.hasPermission("VIEW_AUDIT_LOG")){
+    if(msg.member.permissions.has("VIEW_AUDIT_LOG")){
         const channel = args[0];
         const broadcastMsg = msg.content.split(channel+' ')[1];
 
@@ -189,7 +186,7 @@ function give(msg,args){
     }
 
 
-    if(msg.member.hasPermission("MANAGE_MESSAGES")){
+    if(msg.member.permissions.has("MANAGE_MESSAGES")){
         var memberArgs = args[0].match(/(?:^<@!)(\d+)(?:>$)/);
         var giveRoleArgs = args[1].match(/(?:^<@&)(\d+)(?:>$)/);
 
@@ -226,7 +223,7 @@ function role(msg,args){
     }
 
 
-    if(msg.member.hasPermission("MANAGE_ROLES")){
+    if(msg.member.permissions.has("MANAGE_ROLES")){
         var memberRoleArgs = args[0].match(/(?:^<@&)(\d+)(?:>$)/);
         var giveRoleArgs = args[1].match(/(?:^<@&)(\d+)(?:>$)/);
 
@@ -259,19 +256,19 @@ function role(msg,args){
 }
 
 function channelRank(msg){
-    if(msg.member.hasPermission("MANAGE_CHANNELS")){
+    if(msg.member.permissions.has("MANAGE_CHANNELS")){
         if(msg.attachments.size < 1){
             msg.react('❔');
             msg.reply('這個指令請搭配檔案上傳使用');
             return;
         }
-        else if(!msg.attachments.array()[0].name.match(/\w+\.csv/)){
+        else if(!msg.attachments.first().name.match(/\w+\.csv/)){
             msg.react('❔');
             msg.reply('請上傳正確的csv檔喔');
             return;
         }
 
-        request.get(msg.attachments.array()[0].url,async function (error, response, body) {
+        request.get(msg.attachments.first().url,async function (error, response, body) {
             if (!error && response.statusCode == 200) {
                 const parse = csv.parse(body);
                 var childChannel = [];
@@ -279,7 +276,10 @@ function channelRank(msg){
                 await parse.forEach(channel =>{
                     if(channel[2].match(/\d{18}/)){
                         var getChannel = msg.guild.channels.cache.get(channel[2]);
-                        if(getChannel.parentID == '811570519216226304' ||  getChannel.parentID == '834359296183238716' || getChannel.parentID == '851355842367717376'){
+                        if(getChannel.parentId == '811570519216226304' 
+                        || getChannel.parentId == '834359296183238716' 
+                        || getChannel.parentId == '851355842367717376'
+                        || getChannel.parentId == '870598474817749002'){
                             childChannel.push(channel);
                         }
                     }
@@ -290,7 +290,7 @@ function channelRank(msg){
                 let count = 1;
                 var sendMessage = `根據${childChannel[0][0].substring(0,10)}的總訊息數做討論區人氣排序:\n`;
                 childChannel.forEach(async channel =>{
-                    sendMessage += `第${count}名 ${channel[1]} : ${channel[5]}\n`;
+                    sendMessage += `第${count}名 <#${channel[2]}> : ${channel[5]}\n`;
                     count += 1;
                     if(count%30 == 0){
                         msg.channel.send(sendMessage);
@@ -311,12 +311,11 @@ function channelRank(msg){
 }
 
 function about(msg){
-    msg.channel.send(aboutEmbed(Date.now() - msg.createdAt));
+    msg.channel.send({embeds:[aboutEmbed(Date.now() - msg.createdAt)]});
 }
 
-function guild(msg){
-    const guild = msg.channel.guild;
-    msg.channel.send(guildEmbed(guild));
+async function guild(msg){
+    msg.channel.send({embeds:[await guildEmbed(msg)]});
 }
 
 module.exports = {

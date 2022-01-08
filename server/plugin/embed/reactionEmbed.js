@@ -15,7 +15,7 @@ async function reactionEmbed(msg, result){
 
     for(var i=0; i<result.length; i++){
         if(i%10 == 0 && i != 0){
-            embed.setFooter('page'+ (Math.floor(i/10)) + "/" + (options.max+1))
+            embed.setFooter({text:'page'+ (Math.floor(i/10)) + "/" + (options.max+1)})
             pages.push(embed);
             embed = searchEmbed();
         }
@@ -23,12 +23,12 @@ async function reactionEmbed(msg, result){
         embed.addField(result[i]['input'] , result[i]['output']);
 
         if(i+1 == result.length){
-            embed.setFooter('page'+ (Math.floor(i/10)+1) + "/" + (options.max+1))
+            embed.setFooter({text:'page'+ (Math.floor(i/10)+1) + "/" + (options.max+1)})
             pages.push(embed);
         }
     }
 
-    const m = await msg.channel.send({ embed: pages[options.page] });
+    const m = await msg.channel.send({ embeds:[pages[options.page]]});
 
     await m.react('⬅');
     await m.react('➡');
@@ -42,40 +42,35 @@ async function reactionEmbed(msg, result){
 }
 
 const awaitReactions = async (msg, m, options, filter, pages) => {
-   
-    m.awaitReactions(filter, { max: 1, time: options.limit, errors: ['time']})
-    .then(async (collected) => {
-        const reaction = collected.first();
+
+    const reactionCollector = m.createReactionCollector({ filter, time: options.limit, dispose: true});
+    reactionCollector.on('collect', async (reaction, user) => {
         if (reaction.emoji.name === '⬅') {
             await removeReaction(m, msg, '⬅');
-            
             if (options.page != options.min) {
                 --options.page;
-                await m.edit(pages[options.page]);
+                await m.edit({embeds:[pages[options.page]]});
             }
-
-            awaitReactions(msg, m, options, filter, pages);
         }
         else if (reaction.emoji.name === '➡') {
             await removeReaction(m, msg, '➡');
-            
             if (options.page != options.max) {
                 ++options.page;
-                await m.edit(pages[options.page]);
+                await m.edit({embeds:[pages[options.page]]});
             }
-
-            awaitReactions(msg, m, options, filter, pages);
         }
         else if (reaction.emoji.name === '🗑') {
-            return await m.delete();
+            reactionCollector.stop('messageDelete');
+            await m.delete();
         }
-        else {
-            awaitReactions(msg, m, options, filter, pages);
-        };
-    }).catch(() => {
-        m.reactions.removeAll();
-        m.react('🚫');
     });
+    reactionCollector.on('end', (collected, reason) => {
+        if(reason == 'time'){
+            m.reactions.removeAll();
+            m.react('🚫');
+        }
+    });
+
 }
 
 const removeReaction = async (m, msg, emoji) => {
@@ -87,7 +82,7 @@ function searchEmbed(){
         .setColor('#7373B9')
         .setTitle('搜尋結果')
         .setDescription('這就是你們製造出來的罪孽')
-        .setAuthor('愛麗絲','https://i.imgur.com/8hLIxzh.jpg')
+        .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
         .setTimestamp()
 
     return embed;
