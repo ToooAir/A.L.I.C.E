@@ -23,6 +23,12 @@ client.on('messageCreate', msg => {
 
     if(msg.author.bot || msg.channel.type == 'dm') return;
 
+    if(msg.content.includes("@everyone")){
+        msg.channel.send(`${msg.author} 不可以壞壞 <:y_31:825033494349480026>`);
+        msg.delete();
+        return;
+    }
+
     if(msg.content.startsWith(prefixM)){
         prefix(msg);
     }else{
