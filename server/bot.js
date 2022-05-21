@@ -42,18 +42,23 @@ client.on('messageDelete', msg => {
     if(msg.content != ''){
         
         var memberId = '';
-        if(msg.member.id){
+        if(msg.member.hasOwnProperty('id')){
             memberId = msg.member.id;
         }else{
             memberId = msg.author.id;
         }
+        
 
         const embed = new Discord.MessageEmbed()
         .setColor('#FF2D2D')
         .setAuthor({name:msg.author.tag, iconURL:msg.author.avatarURL()})
         .setDescription(`🗑 <@!${memberId}>在<#${msg.channel.id}>的訊息被刪除了\n${msg.content}`)
 	    .setTimestamp()
-        .setFooter({text:'訊息ID：' +  msg.id});
+
+        if(msg.hasOwnProperty('id')){
+            embed.setFooter({text:'訊息ID：' +  msg.id});
+        }
+        
 
         //保存刪除訊息的頻道
         msg.guild.channels.cache.get('831071520348569620').send({embeds:[embed]});
