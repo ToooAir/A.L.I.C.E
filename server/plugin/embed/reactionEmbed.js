@@ -20,7 +20,7 @@ async function reactionEmbed(msg, result){
             embed = searchEmbed();
         }
 
-        embed.addField(result[i]['input'] , result[i]['output']);
+        embed.addFields([{name: result[i]['input'] , value: result[i]['output']}]);
 
         if(i+1 == result.length){
             embed.setFooter({text:'page'+ (Math.floor(i/10)+1) + "/" + (options.max+1)})
