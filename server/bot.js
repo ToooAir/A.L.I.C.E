@@ -1,10 +1,19 @@
 'use strict';
-const Discord = require('discord.js');
-const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_PRESENCES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS"] });
+const { Client, GatewayIntentBits} = require('discord.js');
 const {talk} = require('./plugin/talk');
 const {prefix} = require('./plugin/prefix');
 const config = require('./config');
 const prefixM = require('./config').prefix;
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions
+    ]
+});
 
 
 // 登入
@@ -19,7 +28,7 @@ client.on('ready', () => {
 
 
 // 訊息觸發
-client.on('messageCreate', msg => {
+client.on('messageCreate',async msg => {
 
     if(msg.author.bot || msg.channel.type == 'dm') return;
 
@@ -28,11 +37,13 @@ client.on('messageCreate', msg => {
         return;
     }
 
-    if(msg.content.startsWith(prefixM)){
-        prefix(msg);
-    }else{
-        talk(msg);
-    }
+    console.log(msg)
+
+    // if(msg.content.startsWith(prefixM)){
+    //     prefix(msg);
+    // }else{
+    //     talk(msg);
+    // }
 
 });
 

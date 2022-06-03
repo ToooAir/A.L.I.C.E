@@ -10,6 +10,16 @@
   "author": "ToooAir",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^13.5.0"
-  }
+    "discord.js": "^14.0.0-dev.1653480262-68d5169"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ToooAir/A.L.I.C.E.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/ToooAir/A.L.I.C.E/issues"
+  },
+  "homepage": "https://github.com/ToooAir/A.L.I.C.E#readme"
 }
