@@ -95,7 +95,7 @@ function aboutEmbed(ping){
         .setTitle('Alice·Synthesis·Thirty')
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
         .setDescription('聖托利亞市域統括，公理教會整合騎士\n愛麗絲·Synthesis·Thirty\n是來自UnderWorld的人工AI\n目前被綁架到這邊當你們的神聖語小老師。')
-        .addField('ping', ping +' ms')
+        .addFields([{name:'ping', value: ping+' ms'}])
 
     return embed;
 }
