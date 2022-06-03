@@ -1,5 +1,5 @@
 'use strict';
-const { Client, GatewayIntentBits} = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder} = require('discord.js');
 const {talk} = require('./plugin/talk');
 const {prefix} = require('./plugin/prefix');
 const config = require('./config');
@@ -11,7 +11,8 @@ const client = new Client({
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildPresences,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildMessageReactions
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.MessageContent,
     ]
 });
 
@@ -37,13 +38,11 @@ client.on('messageCreate',async msg => {
         return;
     }
 
-    console.log(msg)
-
-    // if(msg.content.startsWith(prefixM)){
-    //     prefix(msg);
-    // }else{
-    //     talk(msg);
-    // }
+    if(msg.content.startsWith(prefixM)){
+        prefix(msg);
+    }else{
+        talk(msg);
+    }
 
 });
 
@@ -60,7 +59,7 @@ client.on('messageDelete', msg => {
         }
         
 
-        const embed = new Discord.MessageEmbed()
+        const embed = new EmbedBuilder()
         .setColor('#FF2D2D')
         .setAuthor({name:msg.author.tag, iconURL:msg.author.avatarURL()})
         .setDescription(`🗑 <@!${memberId}>在<#${msg.channel.id}>的訊息被刪除了\n${msg.content}`)
@@ -83,8 +82,6 @@ client.on('messageDelete', msg => {
 client.on("messageReactionAdd", async function(messageReaction, user){
 
     if (messageReaction.message.partial) await messageReaction.message.fetch();
-
-    console.log(messageReaction);
   
     if(messageReaction.message.content === "Message"){
         if(user.bot){return}

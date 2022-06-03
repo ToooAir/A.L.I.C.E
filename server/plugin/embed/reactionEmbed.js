@@ -1,5 +1,5 @@
 'use strict';
-const Discord = require('discord.js');
+const {EmbedBuilder} = require('discord.js');
 
 async function reactionEmbed(msg, result){
 
@@ -78,7 +78,7 @@ const removeReaction = async (m, msg, emoji) => {
 }
 
 function searchEmbed(){
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#7373B9')
         .setTitle('搜尋結果')
         .setDescription('這就是你們製造出來的罪孽')

@@ -1,8 +1,8 @@
-const Discord = require('discord.js');
+const {EmbedBuilder} = require('discord.js');
 const prefixM = require('../../config').prefix;
 
 function help(){
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#46A3FF')
         .setTitle('神聖語指令')
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
@@ -22,7 +22,7 @@ function help(){
 }
 
 function replyHelp(){
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#FFDC35')
         .setTitle('reply相關指令')
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
@@ -43,7 +43,7 @@ function replyHelp(){
 
 
 function replyAdd(input,output,user){
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#02DF82')
         .setTitle('回覆已新增')
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
@@ -59,7 +59,7 @@ function replyAdd(input,output,user){
 }
 
 function replyUpdate(input,output,user){
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#7D7DFF')
         .setTitle('回覆已修改')
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
@@ -75,7 +75,7 @@ function replyUpdate(input,output,user){
 }
 
 function replyDelete(input,user){
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#FF2D2D')
         .setTitle('回覆已刪除')
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
@@ -90,7 +90,7 @@ function replyDelete(input,user){
 }
 
 function aboutEmbed(ping){
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#FFDC35')
         .setTitle('Alice·Synthesis·Thirty')
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
@@ -105,7 +105,7 @@ async function guildEmbed(msg){
     const owner = await guild.fetchOwner();
     const roles = await guild.roles.fetch();
     const members = await guild.members.fetch();
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#FF79BC')
         .setTitle(guild.name)
         .setThumbnail(guild.iconURL())
