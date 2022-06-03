@@ -1,5 +1,5 @@
 'use strict';
-const { Client, GatewayIntentBits, EmbedBuilder} = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActivityType} = require('discord.js');
 const {talk} = require('./plugin/talk');
 const {prefix} = require('./plugin/prefix');
 const config = require('./config');
@@ -22,7 +22,7 @@ client.login(config.key);
 
 // 準備
 client.on('ready', () => {
-    client.user.setActivity(`[${prefixM}help] 基礎神聖語`, { type: 'PLAYING' });
+    client.user.setActivity(`[${prefixM}help] 基礎神聖語`, { type: ActivityType.Playing });
     console.log(`Logged in as ${client.user.tag}!`);
 });
 
