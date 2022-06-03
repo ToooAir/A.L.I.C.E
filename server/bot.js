@@ -23,7 +23,7 @@ client.login(config.key);
 // 準備
 client.on('ready', () => {
     client.user.setActivity(`[${prefixM}help] 基礎神聖語`, { type: ActivityType.Playing });
-    console.log(`Logged in as ${client.user.tag}!`);
+    console.log(`[Ready] Logged in as ${client.user.tag}!`);
 });
 
 
