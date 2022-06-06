@@ -1,5 +1,5 @@
 'use strict';
-const {messageValue, reply, replyInPM, random, isBot} = require('../tool');
+const {messageValue, reply, replyInPM, random} = require('../tool');
 const {readReply} = require('./mysql')
 
 function talk(inMsg){
@@ -45,10 +45,11 @@ function ihateyou(inMsg) {
             replyInPM(inMsg, "不然我來當你朋友吧?")
         }, 3000);
 
-        console.log(`Sent a love to ${inMsg.author.username}`);
+        console.log(`[Log] Sent a love to ${inMsg.author.username}`);
     }
 };
 
+// 全自動反應
 function reactMsg(inMsg){
     let msg = messageValue(inMsg);
     if(inMsg.author.id == '337540973166854146'){

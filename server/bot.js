@@ -1,10 +1,20 @@
 'use strict';
-const Discord = require('discord.js');
-const client = new Discord.Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_PRESENCES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS"] });
+const { Client, GatewayIntentBits, EmbedBuilder, ActivityType} = require('discord.js');
 const {talk} = require('./plugin/talk');
 const {prefix} = require('./plugin/prefix');
 const config = require('./config');
 const prefixM = require('./config').prefix;
+
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.MessageContent,
+    ]
+});
 
 
 // 登入
@@ -12,14 +22,14 @@ client.login(config.key);
 
 // 準備
 client.on('ready', () => {
-    client.user.setActivity(`[${prefixM}help] 基礎神聖語`, { type: 'PLAYING' });
-    console.log(`Logged in as ${client.user.tag}!`);
+    client.user.setActivity(`[${prefixM}help] 基礎神聖語`, { type: ActivityType.Playing });
+    console.log(`[Ready] Logged in as ${client.user.tag}!`);
 });
 
 
 
 // 訊息觸發
-client.on('messageCreate', msg => {
+client.on('messageCreate',async msg => {
 
     if(msg.author.bot || msg.channel.type == 'dm') return;
 
@@ -49,7 +59,7 @@ client.on('messageDelete', msg => {
         }
         
 
-        const embed = new Discord.MessageEmbed()
+        const embed = new EmbedBuilder()
         .setColor('#FF2D2D')
         .setAuthor({name:msg.author.tag, iconURL:msg.author.avatarURL()})
         .setDescription(`🗑 <@!${memberId}>在<#${msg.channel.id}>的訊息被刪除了\n${msg.content}`)
@@ -72,8 +82,6 @@ client.on('messageDelete', msg => {
 client.on("messageReactionAdd", async function(messageReaction, user){
 
     if (messageReaction.message.partial) await messageReaction.message.fetch();
-
-    console.log(messageReaction);
   
     if(messageReaction.message.content === "Message"){
         if(user.bot){return}

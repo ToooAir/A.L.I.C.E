@@ -1,5 +1,5 @@
 'use strict';
-const Discord = require('discord.js');
+const {EmbedBuilder} = require('discord.js');
 
 async function reactionEmbed(msg, result){
 
@@ -20,7 +20,7 @@ async function reactionEmbed(msg, result){
             embed = searchEmbed();
         }
 
-        embed.addField(result[i]['input'] , result[i]['output']);
+        embed.addFields([{name: result[i]['input'] , value: result[i]['output']}]);
 
         if(i+1 == result.length){
             embed.setFooter({text:'page'+ (Math.floor(i/10)+1) + "/" + (options.max+1)})
@@ -78,7 +78,7 @@ const removeReaction = async (m, msg, emoji) => {
 }
 
 function searchEmbed(){
-    const embed = new Discord.MessageEmbed()
+    const embed = new EmbedBuilder()
         .setColor('#7373B9')
         .setTitle('搜尋結果')
         .setDescription('這就是你們製造出來的罪孽')

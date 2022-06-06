@@ -21,15 +21,15 @@ function prefix(msg) {
             reply(msg, args);
             break;
         case 'clear':
-	    clear(msg, args);
+	        clear(msg, args);
             break;
-	case 'broadcast':
+	    case 'broadcast':
             broadcast(msg, args);
             break;
-	case 'give':
+	    case 'give':
             give(msg,args);
             break;
-	case 'role':
+	    case 'role':
             role(msg, args);
             break;
         case 'about':
@@ -38,7 +38,7 @@ function prefix(msg) {
         case 'guild':
             guild(msg);
             break;
-	case 'rank':
+	    case 'rank':
             channelRank(msg);
             break;
         default:
@@ -109,7 +109,7 @@ function reply(msg,args){
 }
 
 async function clear(msg,args){
-    if(msg.channel.permissionsFor(msg.author).has('MANAGE_MESSAGES', true)){
+    if(msg.channel.permissionsFor(msg.author).has('ManageMessages', true)){
         if(args.length != 5){
             msg.react('❔');
             msg.reply('請按照 [西元年] [月] [日] [時(24小時)] [分] 輸入');
@@ -156,7 +156,7 @@ function broadcast(msg,args){
         return;
     }
 
-    if(msg.member.permissions.has("VIEW_AUDIT_LOG")){
+    if(msg.member.permissions.has("ViewAuditLog")){
         const channel = args[0];
         const broadcastMsg = msg.content.split(channel+' ')[1];
 
@@ -186,8 +186,8 @@ function give(msg,args){
     }
 
 
-    if(msg.member.permissions.has("MANAGE_MESSAGES")){
-        var memberArgs = args[0].match(/(?:^<@!)(\d+)(?:>$)/);
+    if(msg.member.permissions.has("ManageMessages")){
+        var memberArgs = args[0].match(/(?:^<@)(\d+)(?:>$)/);
         var giveRoleArgs = args[1].match(/(?:^<@&)(\d+)(?:>$)/);
 
         if(memberArgs && giveRoleArgs){
@@ -195,7 +195,7 @@ function give(msg,args){
             var giveRole = msg.guild.roles.cache.get(giveRoleArgs[1]);
 
             if(member && giveRole){
-                if(giveRole.permissions.has('ADMINISTRATOR', true)){
+                if(giveRole.permissions.has('Administrator', true)){
                     msg.reply('管理員權限的身分組是不被允許給其他人的');
                 }else{
                     member.roles.add(giveRole);
@@ -223,7 +223,7 @@ function role(msg,args){
     }
 
 
-    if(msg.member.permissions.has("MANAGE_ROLES")){
+    if(msg.member.permissions.has("ManageRoles")){
         var memberRoleArgs = args[0].match(/(?:^<@&)(\d+)(?:>$)/);
         var giveRoleArgs = args[1].match(/(?:^<@&)(\d+)(?:>$)/);
 
@@ -232,7 +232,7 @@ function role(msg,args){
             var giveRole = msg.guild.roles.cache.get(giveRoleArgs[1]);
 
             if(memberRole && giveRole){
-		if(giveRole.permissions.has('ADMINISTRATOR', true)){
+		if(giveRole.permissions.has('Administrator', true)){
                     msg.reply('管理員權限的身分組是不被允許給其他人的');
                 }else{
                     memberRole.members.forEach(member =>{
@@ -256,7 +256,7 @@ function role(msg,args){
 }
 
 function channelRank(msg){
-    if(msg.member.permissions.has("MANAGE_CHANNELS")){
+    if(msg.member.permissions.has("ManageChannels")){
         if(msg.attachments.size < 1){
             msg.react('❔');
             msg.reply('這個指令請搭配檔案上傳使用');

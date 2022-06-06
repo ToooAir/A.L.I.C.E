@@ -9,7 +9,7 @@ function createReply(input, output){
         pool.query('INSERT INTO reply (input, output) VALUES (?, ?);', [input, output],
             function (err, results, fields) {
                 if (err) throw err;
-                console.log('Inserted ' + results.affectedRows + ' row(s).');
+                console.log('[SQL insert] Inserted ' + results.affectedRows + ' row(s).');
             }
         );
         resolve();
@@ -61,7 +61,7 @@ function searchReply(input){
         pool.query("SELECT * FROM reply WHERE input LIKE ? or output LIKE ? ORDER BY id DESC", ['%'+[input]+'%','%'+[input]+'%'],
             function (err, results, fields) {
                 if (err) throw err;
-                else console.log('Selected ' + results.length + ' row(s).');
+                else console.log('[SQL search] Selected ' + results.length + ' row(s).');
                 resolve(results);
             }
         );
