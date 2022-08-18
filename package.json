@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "csv-string": "^4.1.0",
-    "discord.js": "^14.0.0-dev.1653480262-68d5169",
+    "discord.js": "^14.2.0",
     "mysql": "^2.18.1",
     "request": "^2.88.2"
   },
