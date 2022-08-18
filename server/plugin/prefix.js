@@ -276,10 +276,8 @@ function channelRank(msg){
                 await parse.forEach(channel =>{
                     if(channel[2].match(/\d{18}/)){
                         var getChannel = msg.guild.channels.cache.get(channel[2]);
-                        if(getChannel.parentId == '811570519216226304' 
-                        || getChannel.parentId == '834359296183238716' 
-                        || getChannel.parentId == '851355842367717376'
-                        || getChannel.parentId == '870598474817749002'){
+                        if(getChannel.parentId == '1004665762453143612' 
+                        || getChannel.parentId == '811570519216226304' ){
                             childChannel.push(channel);
                         }
                     }
