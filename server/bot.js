@@ -52,7 +52,7 @@ client.on('messageDelete', msg => {
     if(msg.content != ''){
         
         var memberId = '';
-        if(msg.member.hasOwnProperty('id')){
+        if(msg.member != null && msg.member.hasOwnProperty('id')){
             memberId = msg.member.id;
         }else{
             memberId = msg.author.id;
@@ -65,7 +65,7 @@ client.on('messageDelete', msg => {
         .setDescription(`🗑 <@!${memberId}>在<#${msg.channel.id}>的訊息被刪除了\n${msg.content}`)
 	    .setTimestamp()
 
-        if(msg.hasOwnProperty('id')){
+        if(msg != null && msg.hasOwnProperty('id')){
             embed.setFooter({text:'訊息ID：' +  msg.id});
         }
         
