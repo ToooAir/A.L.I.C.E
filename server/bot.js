@@ -31,10 +31,15 @@ client.on('ready', () => {
 // 訊息觸發
 client.on('messageCreate',async msg => {
 
-    if(msg.author.bot || msg.channel.type == 'dm') return;
+    if(msg.author.bot) return;
 
     if(msg.content.includes("@everyone")){
         msg.delete();
+        return;
+    }
+
+    if(msg.channel.type == 'dm'){
+        talk(msg);
         return;
     }
 
@@ -43,6 +48,7 @@ client.on('messageCreate',async msg => {
     }else{
         talk(msg);
     }
+    return;
 
 });
 
