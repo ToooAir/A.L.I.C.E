@@ -1,5 +1,5 @@
 'use strict';
-const { Client, GatewayIntentBits, EmbedBuilder, ActivityType} = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, ActivityType, Partials} = require('discord.js');
 const {talk} = require('./plugin/talk');
 const {prefix} = require('./plugin/prefix');
 const config = require('./config');
@@ -13,7 +13,9 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.MessageContent,
-    ]
+        GatewayIntentBits.DirectMessages
+    ],
+    partials: [Partials.Channel]
 });
 
 
