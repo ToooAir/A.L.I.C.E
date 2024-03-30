@@ -40,7 +40,8 @@ client.on('messageCreate',async msg => {
         return;
     }
 
-    if(msg.channel.type == 'dm'){
+    if(msg.channel.type == 1){
+	// 檢查為DMChannel
         talk(msg);
         return;
     }
