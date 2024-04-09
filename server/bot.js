@@ -71,10 +71,10 @@ client.on('messageCreate',async message => {
 
     if(message.author.bot) return;
 
-    // if(message.content.includes('@everyone')){
-    //     message.delete();
-    //     return;
-    // }
+    if(message.content.includes('@everyone')){
+        message.delete();
+        return;
+    }
 
     if(message.channel.type == 1){
         replyInDM(message);
