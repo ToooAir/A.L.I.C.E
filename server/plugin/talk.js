@@ -47,10 +47,10 @@ function greeting(message) {
 }
 
 function ihateyou(message) {
-    message.react('🥺');
     const content = message.content;
 
     if (content.match('^我討厭你((.?|.{2,32})$)')) {
+        message.react('🥺');
         message.channel.send('你說真的嗎? 但我很喜歡你喔!');
 
         setTimeout(() => {
