@@ -1,5 +1,5 @@
 //rename this to config.js
-const token = ""; //discord bot token
+const token = ''; //discord bot token
 const prefix = '*';
 const mysqlConnect =
 {

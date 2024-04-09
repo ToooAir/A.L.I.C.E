@@ -4,16 +4,10 @@ const prefixM = require('../../config').prefix;
 function help(){
     const embed = new EmbedBuilder()
         .setColor('#46A3FF')
-        .setTitle('神聖語指令')
+        .setTitle('舊神聖語指令')
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
-        .setDescription('這是目前我所知道的神聖語')
+        .setDescription('這是目前我所知道的舊神聖語')
         .addFields([
-            {name:'自我介紹', value: prefixM + 'about'},
-            {name:'群組人數', value: prefixM + 'guild'},
-            {name:'回覆', value: prefixM + 'reply'},
-            {name:'洗地', value: prefixM + 'clear'},
-            {name:'給 一個人 身分組', value: prefixM + 'give'},
-            {name:'給 一個身分 身分組', value: prefixM + 'role'},
             {name:'討論區水量排序(with CSV)', value: prefixM + 'rank'},
         ])
         .setTimestamp()
@@ -29,10 +23,10 @@ function replyHelp(){
         .setDescription('真受不了.....讓我來教你吧')
         .setThumbnail('https://i.imgur.com/pVYFvSs.jpg')
         .addFields([
-            {name:'新增/修改回覆', value: prefixM + 'reply add [觸發關鍵字] [回覆內容]'},
-            {name:'刪除回覆', value: prefixM + 'reply delete [觸發關鍵字]'},
-            {name:'搜尋回覆', value: prefixM +'reply search [觸發關鍵字]'},
-            {name:'隨機回覆內容', value: '將多個[回覆內容]用 ^ 來分開'},
+            {name:'新增/修改回覆', value: '/reply add [觸發關鍵字] [回覆內容]'},
+            {name:'刪除回覆', value: '/reply delete [觸發關鍵字]'},
+            {name:'搜尋回覆', value: '/reply search [觸發關鍵字]'},
+            {name:'隨機回覆內容', value: '將多個[回覆內容]用 ^ 來分開 ex:[一^二]'},
             {name:'Tag 觸發訊息者', value: '在[回覆內容]裡加入 {m}'},
         ])
         .setTimestamp()
@@ -100,27 +94,31 @@ function aboutEmbed(ping){
     return embed;
 }
 
-async function guildEmbed(msg){
-    const guild = msg.guild;
+async function guildEmbed(message, results){
+    const guild = message.guild;
     const owner = await guild.fetchOwner();
     const roles = await guild.roles.fetch();
     const members = await guild.members.fetch();
+
+    let fields = [
+        {name:'人數', value: guild.memberCount.toString()},
+        {name:'線上', value: members.filter(m => m.presence?.status === 'online').size.toString(), inline: true},
+        {name:'閒置', value: members.filter(m => m.presence?.status === 'idle').size.toString(), inline: true},
+        {name:'請勿打擾', value: members.filter(m => m.presence?.status === 'dnd').size.toString(), inline: true}
+    ]
+    if (results.length > 0){
+        results.forEach(result => {
+            let guildRole = roles.get(result['roleId']);
+            fields.push({name: guildRole.name, value: guildRole.members.size.toString() ,inline: true})
+        });
+    }
+
     const embed = new EmbedBuilder()
         .setColor('#FF79BC')
         .setTitle(guild.name)
         .setThumbnail(guild.iconURL())
         .setAuthor({name:owner.user.tag, iconURL:owner.user.avatarURL()})
-        .addFields([
-            {name:'人數', value: guild.memberCount.toString()},
-            {name:'線上', value: members.filter(m => m.presence?.status === 'online').size.toString(), inline: true},
-            {name:'閒置', value: members.filter(m => m.presence?.status === 'idle').size.toString(), inline: true},
-            {name:'請勿打擾', value: members.filter(m => m.presence?.status === 'dnd').size.toString(), inline: true},
-            {name:'會員', value: roles.get('785467770698465282').members.size.toString()},
-            {name:'VTUBER', value: roles.get('785901109071839244').members.size.toString() ,inline: true},
-            {name:'Vtuber準備中', value: roles.get('811930854401638411').members.size.toString() ,inline: true},
-            {name:'Vtuber幕後', value: roles.get('811516908867551282').members.size.toString() ,inline: true},
-        ])
-
+        .addFields(fields)
     return embed;
 }
 

@@ -1,7 +1,7 @@
 'use strict';
 const {EmbedBuilder} = require('discord.js');
 
-async function reactionEmbed(msg, result){
+async function reactionEmbed(interaction, result){
 
     const options = {
         limit: 30 * 1000,
@@ -15,7 +15,7 @@ async function reactionEmbed(msg, result){
 
     for(var i=0; i<result.length; i++){
         if(i%10 == 0 && i != 0){
-            embed.setFooter({text:'page'+ (Math.floor(i/10)) + "/" + (options.max+1)})
+            embed.setFooter({text:'page'+ (Math.floor(i/10)) + '/' + (options.max+1)})
             pages.push(embed);
             embed = searchEmbed();
         }
@@ -23,37 +23,37 @@ async function reactionEmbed(msg, result){
         embed.addFields([{name: result[i]['input'] , value: result[i]['output']}]);
 
         if(i+1 == result.length){
-            embed.setFooter({text:'page'+ (Math.floor(i/10)+1) + "/" + (options.max+1)})
+            embed.setFooter({text:'page'+ (Math.floor(i/10)+1) + '/' + (options.max+1)})
             pages.push(embed);
         }
     }
 
-    const m = await msg.channel.send({ embeds:[pages[options.page]]});
+    const m = await interaction.reply({ embeds:[pages[options.page]], fetchReply: true});
 
     await m.react('⬅');
     await m.react('➡');
     await m.react('🗑');
     
     const filter = (reaction, user) => {
-        return ['⬅', '➡', '🗑'].includes(reaction.emoji.name) && user.id == msg.author.id;
+        return ['⬅', '➡', '🗑'].includes(reaction.emoji.name) && user.id == interaction.user.id;
     };
 
-    awaitReactions(msg, m, options, filter, pages);
+    awaitReactions(interaction, m, options, filter, pages);
 }
 
-const awaitReactions = async (msg, m, options, filter, pages) => {
+const awaitReactions = async (interaction, m, options, filter, pages) => {
 
     const reactionCollector = m.createReactionCollector({ filter, time: options.limit, dispose: true});
     reactionCollector.on('collect', async (reaction, user) => {
         if (reaction.emoji.name === '⬅') {
-            await removeReaction(m, msg, '⬅');
+            await removeReaction(m, interaction, '⬅');
             if (options.page != options.min) {
                 --options.page;
                 await m.edit({embeds:[pages[options.page]]});
             }
         }
         else if (reaction.emoji.name === '➡') {
-            await removeReaction(m, msg, '➡');
+            await removeReaction(m, interaction, '➡');
             if (options.page != options.max) {
                 ++options.page;
                 await m.edit({embeds:[pages[options.page]]});
@@ -73,8 +73,8 @@ const awaitReactions = async (msg, m, options, filter, pages) => {
 
 }
 
-const removeReaction = async (m, msg, emoji) => {
-    try { m.reactions.cache.find(r => r.emoji.name == emoji).users.remove(msg.author); } catch(err) {};
+const removeReaction = async (m, interaction, emoji) => {
+    try { m.reactions.cache.find(r => r.emoji.name == emoji).users.remove(interaction.user); } catch(err) {};
 }
 
 function searchEmbed(){
