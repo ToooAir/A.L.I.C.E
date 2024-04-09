@@ -80,7 +80,6 @@ client.on('messageCreate',async message => {
         replyInDM(message);
         return;
     }
-
     if(message.content.startsWith(prefixM)){
         prefix(message);
     }else{
