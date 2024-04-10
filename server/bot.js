@@ -27,7 +27,7 @@ client.login(config.token);
 
 // 準備
 client.on('ready', () => {
-    client.user.setActivity(`[${prefixM}help] 基礎神聖語`, { type: ActivityType.Playing });
+    client.user.setActivity({ type: ActivityType.Custom, name: 'custom', state: `⚔️ [${prefixM}help] 基礎神聖語!` });
     console.log(`[Ready] Logged in as ${client.user.tag}!`);
     require('./regCommand.js');
 });
