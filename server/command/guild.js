@@ -10,10 +10,10 @@ module.exports = {
 
 	async execute(interaction) {
         const guildId = interaction.guildId;
-
+		await interaction.deferReply();
 		readGuildRole(guildId).then(
 			async result =>{
-				await interaction.reply({embeds:[await guildEmbed(interaction, result)]});
+				await interaction.editReply({embeds:[await guildEmbed(interaction, result)]});
 			});
 	}
 };

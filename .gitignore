@@ -6,6 +6,7 @@ target/
 .DS_Store
 node_modules/
 config.js
+ping.js
 
 ### STS ###
 .apt_generated

@@ -7,6 +7,8 @@ module.exports = {
 		.setDescription('愛麗絲的介紹'),
 
 	async execute(interaction) {
-		await interaction.reply({embeds:[aboutEmbed(Date.now() - interaction.createdAt)]});
+		const msg = await interaction.reply({content:'正在計算指令延遲.......', fetchReply: true});
+		let ping = msg.createdTimestamp - interaction.createdTimestamp
+		await interaction.editReply({content:'', embeds:[aboutEmbed(ping)]});
 	},
 };

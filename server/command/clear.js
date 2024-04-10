@@ -29,6 +29,7 @@ module.exports = {
         }else{
             var number = 0;
             var stop = false;
+            await interaction.reply({ content:'清掃🧹開始', fetchReply: true});
             do{
                 await interaction.channel.messages.fetch({limit: 100})
                 .then(messages => {
@@ -44,7 +45,7 @@ module.exports = {
                     interaction.channel.bulkDelete(checkmessage);
                 })
             }while(stop == false);
-            await interaction.reply(`總共刪除了${number}則訊息`.toString());
+            await interaction.editReply({ content:`總共刪除了${number}則訊息`});
         }
 	},
 };

@@ -16,8 +16,9 @@ module.exports = {
             await interaction.reply({content:'管理員權限的身分組是不被允許給其他人的', ephemeral: true});
         }
         else{
+            await interaction.deferReply({ephemeral: true});
             await memberRole.members.forEach(member =>{member.roles.add(giveRole);});
-            await interaction.reply({content:'給予成功', ephemeral: true});
+            await interaction.editReply('給予成功');
         }
 	},
 };
