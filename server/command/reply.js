@@ -70,6 +70,7 @@ module.exports = {
 
             case 'search':
                 input = interaction.options.getString('input');
+                if(input == null) input = '';
                 searchReply(input, guildId).then(
                     result =>{
                         reactionEmbed(interaction,result);
