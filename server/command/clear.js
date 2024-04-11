@@ -19,12 +19,12 @@ module.exports = {
         hour = interaction.options.getInteger('hour');
         minute = interaction.options.getInteger('minute');
 
-		var beforeTimeStamp = new Date(year,month-1,day,hour,minute).getTime();
-        var now = Date.now();
+		var before = new Date(year,month-1,day,hour,minute).getTime();
+        var now = interaction.createdTimestamp;
 
-        if(now-beforeTimeStamp<0){
+        if(now-before<0){
             interaction.reply({content:'你學會了時空支配術要刪除未來訊息?', ephemeral: true });
-        }else if(now-beforeTimeStamp>43200000){  
+        }else if(now-before>43200000){  
             interaction.reply({ content:'無法批次刪除超過12小時前的訊息', ephemeral: true });
         }else{
             var number = 0;
@@ -35,7 +35,7 @@ module.exports = {
                 .then(messages => {
                     var checkmessage = [];
                     messages.forEach(message =>{
-                        if(message.createdTimestamp>beforeTimeStamp){
+                        if(message.createdTimestamp>before && message.createdTimestamp<now){
                             checkmessage.push(message);
                             number++;
                         }else{
