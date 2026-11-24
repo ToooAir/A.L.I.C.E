@@ -4,7 +4,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('clear')
 		.setDescription('大規模訊息刪除')
-        .setDefaultMemberPermissions(PermissionFlagsBits.ViewAuditLog)
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
         .setDMPermission(false)
         .addIntegerOption(option => option.setName('year').setDescription('西元年').setRequired(true))
         .addIntegerOption(option => option.setName('month').setDescription('月').setRequired(true))

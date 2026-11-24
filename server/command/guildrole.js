@@ -6,7 +6,7 @@ module.exports = {
 		.setName('guild-role')
 		.setDescription('伺服器資訊')
 		.setDMPermission(false)
-        .setDefaultMemberPermissions(PermissionFlagsBits.ViewAuditLog)
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand(command => 
             command
             .setName('add')

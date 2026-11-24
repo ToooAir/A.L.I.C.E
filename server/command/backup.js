@@ -5,7 +5,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('backup')
 		.setDescription('伺服器刪除訊息備份')
-        .setDefaultMemberPermissions(PermissionFlagsBits.ViewAuditLog)
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand(command => 
             command

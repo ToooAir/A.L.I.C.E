@@ -1,10 +1,11 @@
-const {SlashCommandBuilder, PermissionFlagsBits  } = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
+const {checkAssignableRole} = require('../plugin/permission');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('give-role-with-role')
 		.setDescription('給予一個身分組的人另一個身分組')
-        .setDefaultMemberPermissions(PermissionFlagsBits.ViewAuditLog)
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
         .setDMPermission(false)
         .addRoleOption(option => option.setName('member-role').setDescription('接收的身分組').setRequired(true))
         .addRoleOption(option => option.setName('give-role').setDescription('要給出的身分組').setRequired(true)),
@@ -12,13 +13,13 @@ module.exports = {
 	async execute(interaction) {
         const memberRole = interaction.options.getRole('member-role');
         const giveRole = interaction.options.getRole('give-role');
-        if(giveRole.permissions.has('Administrator', true)){
-            await interaction.reply({content:'管理員權限的身分組是不被允許給其他人的', ephemeral: true});
+        const error = await checkAssignableRole(interaction, giveRole);
+        if(error){
+            await interaction.reply({content: error, ephemeral: true});
+            return;
         }
-        else{
-            await interaction.deferReply({ephemeral: true});
-            await Promise.all(memberRole.members.map(member => member.roles.add(giveRole)));
-            await interaction.editReply('給予成功');
-        }
+        await interaction.deferReply({ephemeral: true});
+        await Promise.all(memberRole.members.map(member => member.roles.add(giveRole)));
+        await interaction.editReply('給予成功');
 	},
 };
