@@ -62,7 +62,13 @@ client.on(Events.InteractionCreate, async interaction => {
 		await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
-		await interaction.reply({ content:'在執行這個指令的時候發生了錯誤！若持續發生請聯絡管理員🥺', ephemeral: true });
+		const errorReply = { content:'在執行這個指令的時候發生了錯誤！若持續發生請聯絡管理員🥺', ephemeral: true };
+		try {
+			if (interaction.replied || interaction.deferred) await interaction.followUp(errorReply);
+			else await interaction.reply(errorReply);
+		} catch (replyError) {
+			console.error(replyError);
+		}
 	}
 });
 
@@ -90,33 +96,31 @@ client.on('messageCreate',async message => {
 });
 
 // 刪除訊息觸發
-client.on('messageDelete', message => {
-    readBackupChannel(message.guild.id).then(
-        result => {
-            if(result === undefined) return;
-            if(message == null) return;
+client.on('messageDelete', async message => {
+    try {
+        // DMs have no guild; uncached (partial) messages have no author/content to back up.
+        if(!message.guild || message.partial || !message.author) return;
 
-            var channelId = result['channelId'];
-            var memberId = '';
-            if(message.member != null && message.member.hasOwnProperty('id')){
-                memberId = message.member.id;
-            }else{
-                memberId = message.author.id;
-            }
+        const result = await readBackupChannel(message.guild.id);
+        if(result === undefined) return;
 
-            const embed = new EmbedBuilder()
-            .setColor('#FF2D2D')
-            .setAuthor({name:message.author.tag, iconURL:message.author.avatarURL()})
-            .setDescription(`🗑 <@!${memberId}>在<#${message.channel.id}>的訊息被刪除了\n${message.content}`)
-            .setTimestamp()
-            if(message != null && message.hasOwnProperty('id')){
-                embed.setFooter({text:'訊息ID：' +  message.id});
-            }
+        const backupChannel = message.guild.channels.cache.get(result['channelId']);
+        if(!backupChannel) return;
 
-            //保存刪除訊息的頻道
-            message.guild.channels.cache.get(channelId).send({embeds:[embed]});
-        }
-    );
+        const memberId = message.member?.id ?? message.author.id;
+
+        const embed = new EmbedBuilder()
+        .setColor('#FF2D2D')
+        .setAuthor({name:message.author.tag, iconURL:message.author.avatarURL() ?? undefined})
+        .setDescription(`🗑 <@!${memberId}>在<#${message.channel.id}>的訊息被刪除了\n${message.content}`)
+        .setTimestamp()
+        .setFooter({text:'訊息ID：' + message.id});
+
+        //保存刪除訊息的頻道
+        await backupChannel.send({embeds:[embed]});
+    } catch (error) {
+        console.error('[messageDelete]', error);
+    }
 });
 
 //反應訊息觸發
@@ -132,3 +136,8 @@ client.on('messageReactionAdd', async function(messageReaction, user){
     
 });
 
+
+// Last-resort guard so one failed promise doesn't take the whole bot down.
+process.on('unhandledRejection', error => {
+    console.error('[unhandledRejection]', error);
+});

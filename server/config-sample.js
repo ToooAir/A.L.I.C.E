@@ -13,7 +13,8 @@ const mysqlConnect =
 };
 
 module.exports = {
-    key: token,
+    clientId: clientId,
+    token: token,
     prefix: prefix,
     mysqlConnect:mysqlConnect
 }

@@ -17,7 +17,7 @@ function replyInDM(message){
             var replyWord = result['output'].split('^');
             message.channel.send(random(replyWord).replace('{m}', message.author));
         }
-    );
+    ).catch(console.error);
 }
 
 function replyMessage(message){
@@ -29,7 +29,7 @@ function replyMessage(message){
             var replyWord = result['output'].split('^');
             message.channel.send(random(replyWord).replace('{m}', message.author));
         }
-    );
+    ).catch(console.error);
 }
 
 function greeting(message) {

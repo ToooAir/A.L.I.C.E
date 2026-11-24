@@ -23,30 +23,29 @@ module.exports = {
         const guildId = interaction.guildId;
 
 		switch (command) {
-            case 'add':
-                roleId = interaction.options.getRole('role').id;
+            case 'add': {
+                const roleId = interaction.options.getRole('role').id;
 
-                searchGuildRoleByRoleId(roleId).then(
-                    result => {
-                        if(result != undefined){
-							interaction.reply(`<@&${roleId}>之前已經加入過了`);
-                        }else{
-                            createGulidRole(guildId, roleId)
-                            .then(function(){
-                                interaction.reply(`成功將<@&${roleId}>加入至guild`);
-                            })
-                        }
-                    });
+                if(await searchGuildRoleByRoleId(roleId) != undefined){
+                    await interaction.reply(`<@&${roleId}>之前已經加入過了`);
+                }else{
+                    await createGulidRole(guildId, roleId);
+                    await interaction.reply(`成功將<@&${roleId}>加入至guild`);
+                }
                 break;
+            }
 
-            case 'delete':
-				roleId = interaction.options.getRole('role').id;
+            case 'delete': {
+                const roleId = interaction.options.getRole('role').id;
 
-                deleteGulidRole(guildId)
-                .then(function(){
-                    interaction.reply(`已將<@&${roleId}>從guild中移除`);
-                });
+                const deleted = await deleteGulidRole(guildId, roleId);
+                if(deleted > 0){
+                    await interaction.reply(`已將<@&${roleId}>從guild中移除`);
+                }else{
+                    await interaction.reply(`<@&${roleId}>不在guild統計中`);
+                }
                 break;
+            }
         }
 	},
 };

@@ -34,48 +34,40 @@ module.exports = {
         const guildId = interaction.guildId;
 
         switch (command) {
-            case 'add':
-                input = interaction.options.getString('input');
-                output = interaction.options.getString('output');
+            case 'add': {
+                const input = interaction.options.getString('input');
+                const output = interaction.options.getString('output');
                 if(output.length > 1024){
-                    interaction.reply({content:'你的回覆內容超過1024個字, 麻煩刪減至1024個字內喔', ephemeral: true});
+                    await interaction.reply({content:'你的回覆內容超過1024個字, 麻煩刪減至1024個字內喔', ephemeral: true});
                     return;
                 };
-                readReply(input, guildId).then(
-                    result => {
-                        if(result != undefined){
-                            updateReply(input,output, guildId)
-                            .then(function(){
-                                const embed = replyUpdate(input,output,interaction.user);
-                                interaction.reply({embeds:[embed]});
-                            })
-                        }else{
-                            createReply(input,output, guildId)
-                            .then(function(){
-                                const embed = replyAdd(input,output,interaction.user);
-                                interaction.reply({embeds:[embed]});
-                            })
-                        }
-                    });
+                if(await readReply(input, guildId) != undefined){
+                    await updateReply(input, output, guildId);
+                    await interaction.reply({embeds:[replyUpdate(input,output,interaction.user)]});
+                }else{
+                    await createReply(input, output, guildId);
+                    await interaction.reply({embeds:[replyAdd(input,output,interaction.user)]});
+                }
                 break;
+            }
 
-            case 'delete':
-                input = interaction.options.getString('input');
-                deleteReply(input, guildId)
-                .then(function(){
-                    const embed = replyDelete(input,interaction.user);
-                    interaction.reply({embeds:[embed]});
-                });
+            case 'delete': {
+                const input = interaction.options.getString('input');
+                await deleteReply(input, guildId);
+                await interaction.reply({embeds:[replyDelete(input,interaction.user)]});
                 break;
+            }
 
-            case 'search':
-                input = interaction.options.getString('input');
-                if(input == null) input = '';
-                searchReply(input, guildId).then(
-                    result =>{
-                        reactionEmbed(interaction,result);
-                    });
+            case 'search': {
+                const input = interaction.options.getString('input') ?? '';
+                const result = await searchReply(input, guildId);
+                if(result.length == 0){
+                    await interaction.reply({content:'找不到符合的關鍵字', ephemeral: true});
+                    return;
+                }
+                await reactionEmbed(interaction, result);
                 break;
+            }
 
             case 'help':
                 interaction.reply({content:'連神聖語都念不好的孩子呢......', embeds:[replyHelp()]});

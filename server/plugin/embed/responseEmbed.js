@@ -109,6 +109,7 @@ async function guildEmbed(message, results){
     if (results.length > 0){
         results.forEach(result => {
             let guildRole = roles.get(result['roleId']);
+            if (!guildRole) return; // role was deleted from the server
             fields.push({name: guildRole.name, value: guildRole.members.size.toString() ,inline: true})
         });
     }

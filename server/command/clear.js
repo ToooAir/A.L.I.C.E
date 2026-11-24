@@ -13,38 +13,38 @@ module.exports = {
         .addIntegerOption(option => option.setName('minute').setDescription('分').setRequired(true)),
 
 	async execute(interaction) {
-        year = interaction.options.getInteger('year');
-        month = interaction.options.getInteger('month');
-        day = interaction.options.getInteger('day');
-        hour = interaction.options.getInteger('hour');
-        minute = interaction.options.getInteger('minute');
+        const year = interaction.options.getInteger('year');
+        const month = interaction.options.getInteger('month');
+        const day = interaction.options.getInteger('day');
+        const hour = interaction.options.getInteger('hour');
+        const minute = interaction.options.getInteger('minute');
 
 		var before = new Date(year,month-1,day,hour,minute).getTime();
         var now = interaction.createdTimestamp;
 
         if(now-before<0){
-            interaction.reply({content:'你學會了時空支配術要刪除未來訊息?', ephemeral: true });
+            await interaction.reply({content:'你學會了時空支配術要刪除未來訊息?', ephemeral: true });
         }else if(now-before>43200000){  
-            interaction.reply({ content:'無法批次刪除超過12小時前的訊息', ephemeral: true });
+            await interaction.reply({ content:'無法批次刪除超過12小時前的訊息', ephemeral: true });
         }else{
-            var number = 0;
-            var stop = false;
+            let number = 0;
+            let cursor;  // page backwards with `before` so each batch is a new set of messages
             await interaction.reply({ content:'清掃🧹開始', fetchReply: true});
-            do{
-                await interaction.channel.messages.fetch({limit: 100})
-                .then(messages => {
-                    var checkmessage = [];
-                    messages.forEach(message =>{
-                        if(message.createdTimestamp>before && message.createdTimestamp<now){
-                            checkmessage.push(message);
-                            number++;
-                        }else{
-                            stop = true;
-                        }
-                    });
-                    interaction.channel.bulkDelete(checkmessage);
-                })
-            }while(stop == false);
+            while(true){
+                const messages = await interaction.channel.messages.fetch({limit: 100, before: cursor});
+                if(messages.size == 0) break;
+
+                // Skip messages newer than the command (e.g. the reply above); stop once older than `before`.
+                const inRange = messages.filter(m => m.createdTimestamp > before && m.createdTimestamp < now);
+                if(inRange.size > 0){
+                    await interaction.channel.bulkDelete(inRange);
+                    number += inRange.size;
+                }
+
+                const reachedOlder = messages.some(m => m.createdTimestamp <= before);
+                if(reachedOlder || messages.size < 100) break;
+                cursor = messages.lastKey();
+            }
             await interaction.editReply({ content:`總共刪除了${number}則訊息`});
         }
 	},

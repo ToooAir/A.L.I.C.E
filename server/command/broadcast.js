@@ -10,8 +10,8 @@ module.exports = {
         .addStringOption(option => option.setName('message').setDescription('輸入訊息').setRequired(true)),
 
 	async execute(interaction) {
-        Inchannel = interaction.options.getChannel('channel');
-        message = interaction.options.getString('message');
+        const Inchannel = interaction.options.getChannel('channel');
+        const message = interaction.options.getString('message');
         await Inchannel.send(message);
 		await interaction.reply({content:'廣播完成', ephemeral: true})
 	},

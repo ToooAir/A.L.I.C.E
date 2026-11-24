@@ -3,171 +3,82 @@ const {mysqlConnect} = require('../config');
 
 const pool = mysql.createPool(mysqlConnect);
 
-
-function createReply(input, output, guildId){
-    return new Promise((resolve,reject) =>{
-        pool.query('INSERT INTO reply (guildId, input, output) VALUES (?, ?, ?);', [guildId, input, output],
-            function (err, results, fields) {
-                if (err) throw err;
-                console.log('[SQL insert] Inserted ' + results.affectedRows + ' row(s)  from reply..');
-            }
-        );
-        resolve();
-    });
-    
-};
-
-function readReply(input, guildId){
+// Run a query and settle only after MySQL responds; errors reject instead of crashing the process.
+function query(sql, params){
     return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM reply WHERE guildId = ? AND input = ? LIMIT 1', [guildId, input],
-            function (err, results, fields) {
-                if (err) throw err;
-                resolve(results[0]);
-            }
-        );
-
-    });
-    
-};
-
-function updateReply(input, output, guildId){
-    return new Promise((resolve,reject) => {
-        pool.query('UPDATE reply SET output = ? WHERE guildId = ? AND input = ?', [output, guildId, input], 
-            function (err, results, fields) {
-                if (err) throw err;
-            }
-        );
-        resolve();
-    })
-    
-};
-
-function deleteReply(input, guildId){
-    return new Promise((resolve,reject) => {
-        pool.query('DELETE FROM reply WHERE guildId = ? AND input = ?', [guildId, input], 
-            function (err, results, fields) {
-                if (err) throw err;
-            }
-        );
-        resolve();
-    })
-    
-};
-
-function searchReply(input, guildId){
-    return new Promise((resolve,reject) => {
-        pool.query('SELECT * FROM reply WHERE guildId = ? AND (input LIKE ? or output LIKE ?) ORDER BY id DESC', [guildId,'%'+input+'%','%'+input+'%'],
-            function (err, results, fields) {
-                if (err) throw err;
-                else console.log('[SQL search] Selected ' + results.length + ' row(s) from reply.');
-                resolve(results);
-            }
-        );
-    })
-
-}
-
-function readReplyInDM(input){
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM reply WHERE input = ? LIMIT 1', [input],
-            function (err, results, fields) {
-                if (err) throw err;
-                resolve(results[0]);
-            }
-        );
-
+        pool.query(sql, params, (err, results) => {
+            if (err) return reject(err);
+            resolve(results);
+        });
     });
 }
 
-function createBackupChannel(guildId, channelId){
-    return new Promise((resolve, reject) => {
-        pool.query('INSERT INTO backup (guildId,channelId) VALUES (?, ?);', [guildId, channelId],
-            function (err, results, fields) {
-                if (err) throw err;
-                console.log('[SQL insert] Inserted ' + results.affectedRows + ' row(s) from backup.');
-            }
-        );
-        resolve();
-    });
+async function createReply(input, output, guildId){
+    const results = await query('INSERT INTO reply (guildId, input, output) VALUES (?, ?, ?);', [guildId, input, output]);
+    console.log('[SQL insert] Inserted ' + results.affectedRows + ' row(s) from reply.');
 }
 
-function readBackupChannel(guildId){
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM backup WHERE guildId = ? LIMIT 1', [guildId],
-            function (err, results, fields) {
-                if (err) throw err;
-                resolve(results[0]);
-            }
-        );
-    });
+async function readReply(input, guildId){
+    const results = await query('SELECT * FROM reply WHERE guildId = ? AND input = ? LIMIT 1', [guildId, input]);
+    return results[0];
 }
 
-function updateBackupChannel(guildId, channelId){
-    return new Promise((resolve,reject) => {
-        pool.query('UPDATE backup SET channelId = ? WHERE guildId = ?', [channelId, guildId], 
-            function (err, results, fields) {
-                if (err) throw err;
-            }
-        );
-        resolve();
-    })
+async function updateReply(input, output, guildId){
+    await query('UPDATE reply SET output = ? WHERE guildId = ? AND input = ?', [output, guildId, input]);
 }
 
-function deleteBackupChannel(guildId){
-    return new Promise((resolve,reject) => {
-        pool.query('DELETE FROM backup WHERE guildId = ?', [guildId], 
-            function (err, results, fields) {
-                if (err) throw err;
-            }
-        );
-        resolve();
-    })
+async function deleteReply(input, guildId){
+    await query('DELETE FROM reply WHERE guildId = ? AND input = ?', [guildId, input]);
 }
 
-function createGulidRole(guildId, roleId){
-    return new Promise((resolve, reject) => {
-        pool.query('INSERT INTO guild_role (guildId,roleId) VALUES (?, ?);', [guildId, roleId],
-            function (err, results, fields) {
-                if (err) throw err;
-                console.log('[SQL insert] Inserted ' + results.affectedRows + ' row(s) from guild_role.');
-            }
-        );
-        resolve();
-    });
+async function searchReply(input, guildId){
+    const results = await query('SELECT * FROM reply WHERE guildId = ? AND (input LIKE ? or output LIKE ?) ORDER BY id DESC', [guildId, '%'+input+'%', '%'+input+'%']);
+    console.log('[SQL search] Selected ' + results.length + ' row(s) from reply.');
+    return results;
 }
 
-function readGuildRole(guildId){
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM guild_role WHERE guildId = ?', [guildId],
-            function (err, results, fields) {
-                if (err) throw err;
-                else console.log('[SQL search] Selected ' + results.length + ' row(s) from guild_role.');
-                resolve(results);
-            }
-        );
-    });
+async function readReplyInDM(input){
+    const results = await query('SELECT * FROM reply WHERE input = ? LIMIT 1', [input]);
+    return results[0];
 }
 
-function searchGuildRoleByRoleId(roleId){
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM guild_role WHERE roleId = ? LIMIT 1', [roleId],
-            function (err, results, fields) {
-                if (err) throw err;
-                resolve(results[0]);
-            }
-        );
-    });
+async function createBackupChannel(guildId, channelId){
+    const results = await query('INSERT INTO backup (guildId,channelId) VALUES (?, ?);', [guildId, channelId]);
+    console.log('[SQL insert] Inserted ' + results.affectedRows + ' row(s) from backup.');
 }
 
-function deleteGulidRole(guildId, roleId){
-    return new Promise((resolve,reject) => {
-        pool.query('DELETE FROM guild_role WHERE guildId = ? AND roleId = ?', [guildId, roleId], 
-            function (err, results, fields) {
-                if (err) throw err;
-            }
-        );
-        resolve();
-    })
+async function readBackupChannel(guildId){
+    const results = await query('SELECT * FROM backup WHERE guildId = ? LIMIT 1', [guildId]);
+    return results[0];
+}
+
+async function updateBackupChannel(guildId, channelId){
+    await query('UPDATE backup SET channelId = ? WHERE guildId = ?', [channelId, guildId]);
+}
+
+async function deleteBackupChannel(guildId){
+    await query('DELETE FROM backup WHERE guildId = ?', [guildId]);
+}
+
+async function createGulidRole(guildId, roleId){
+    const results = await query('INSERT INTO guild_role (guildId,roleId) VALUES (?, ?);', [guildId, roleId]);
+    console.log('[SQL insert] Inserted ' + results.affectedRows + ' row(s) from guild_role.');
+}
+
+async function readGuildRole(guildId){
+    const results = await query('SELECT * FROM guild_role WHERE guildId = ?', [guildId]);
+    console.log('[SQL search] Selected ' + results.length + ' row(s) from guild_role.');
+    return results;
+}
+
+async function searchGuildRoleByRoleId(roleId){
+    const results = await query('SELECT * FROM guild_role WHERE roleId = ? LIMIT 1', [roleId]);
+    return results[0];
+}
+
+async function deleteGulidRole(guildId, roleId){
+    const results = await query('DELETE FROM guild_role WHERE guildId = ? AND roleId = ?', [guildId, roleId]);
+    return results.affectedRows;
 }
 
 module.exports = {

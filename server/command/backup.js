@@ -22,31 +22,22 @@ module.exports = {
         const guildId = interaction.guildId;
 
         switch (command) {
-            case 'add':
-                channelId = interaction.options.getChannel('channel').id;
+            case 'add': {
+                const channelId = interaction.options.getChannel('channel').id;
 
-                readBackupChannel(guildId).then(
-                    result => {
-                        if(result != undefined){
-                            updateBackupChannel(guildId, channelId)
-                            .then(function(){
-                                interaction.reply(`已成功將備份頻道更改成<#${channelId}>`);
-                            })
-                        }else{
-                            createBackupChannel(guildId, channelId)
-                            .then(function(){
-                                interaction.reply(`成功將<#${channelId}>設定成訊息備份頻道`);
-                            })
-                        }
-                    });
+                if(await readBackupChannel(guildId) != undefined){
+                    await updateBackupChannel(guildId, channelId);
+                    await interaction.reply(`已成功將備份頻道更改成<#${channelId}>`);
+                }else{
+                    await createBackupChannel(guildId, channelId);
+                    await interaction.reply(`成功將<#${channelId}>設定成訊息備份頻道`);
+                }
                 break;
+            }
 
             case 'delete':
-
-                deleteBackupChannel(guildId)
-                .then(function(){
-                    interaction.reply('已將備份頻道刪除，備份功能關閉');
-                });
+                await deleteBackupChannel(guildId);
+                await interaction.reply('已將備份頻道刪除，備份功能關閉');
                 break;
         }
 	},
