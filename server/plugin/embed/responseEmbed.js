@@ -94,33 +94,43 @@ function aboutEmbed(ping){
     return embed;
 }
 
-async function guildEmbed(message, results){
-    const guild = message.guild;
-    const owner = await guild.fetchOwner();
-    const roles = await guild.roles.fetch();
-    const members = await guild.members.fetch();
+// Discord embeds allow at most 25 fields; 4 are used by the member/presence counts.
+const MAX_ROLE_FIELDS = 21;
 
-    let fields = [
+// Fetch the full member list only once per guild. After that the GuildMembers / GuildPresences intents
+// keep the cache current through join/leave/presence events, so repeat calls skip the slow,
+// rate-limited member download.
+async function ensureMembersCached(guild){
+    if (guild.members.cache.size < guild.memberCount) await guild.members.fetch();
+}
+
+async function guildEmbed(interaction, results){
+    const guild = interaction.guild;
+    await ensureMembersCached(guild);
+    const owner = await guild.fetchOwner(); // served from the member cache
+
+    const countStatus = status => guild.presences.cache
+        .filter(p => p.status === status && guild.members.cache.has(p.userId))
+        .size.toString();
+
+    const fields = [
         {name:'人數', value: guild.memberCount.toString()},
-        {name:'線上', value: members.filter(m => m.presence?.status === 'online').size.toString(), inline: true},
-        {name:'閒置', value: members.filter(m => m.presence?.status === 'idle').size.toString(), inline: true},
-        {name:'請勿打擾', value: members.filter(m => m.presence?.status === 'dnd').size.toString(), inline: true}
-    ]
-    if (results.length > 0){
-        results.forEach(result => {
-            let guildRole = roles.get(result['roleId']);
-            if (!guildRole) return; // role was deleted from the server
-            fields.push({name: guildRole.name, value: guildRole.members.size.toString() ,inline: true})
-        });
+        {name:'線上', value: countStatus('online'), inline: true},
+        {name:'閒置', value: countStatus('idle'), inline: true},
+        {name:'請勿打擾', value: countStatus('dnd'), inline: true},
+    ];
+    for (const result of results.slice(0, MAX_ROLE_FIELDS)) {
+        const guildRole = guild.roles.cache.get(result['roleId']);
+        if (!guildRole) continue; // role was deleted from the server
+        fields.push({name: guildRole.name, value: guildRole.members.size.toString(), inline: true});
     }
 
-    const embed = new EmbedBuilder()
+    return new EmbedBuilder()
         .setColor('#FF79BC')
         .setTitle(guild.name)
         .setThumbnail(guild.iconURL())
-        .setAuthor({name:owner.user.tag, iconURL:owner.user.avatarURL()})
-        .addFields(fields)
-    return embed;
+        .setAuthor({name: owner.user.tag, iconURL: owner.user.avatarURL() ?? undefined})
+        .addFields(fields);
 }
 
 
