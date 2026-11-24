@@ -1,13 +1,13 @@
+'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
-'use strict';
-const {Client, GatewayIntentBits, EmbedBuilder, ActivityType, Partials, Collection, Events} = require('discord.js');
+const {Client, GatewayIntentBits, EmbedBuilder, ActivityType, Partials, Collection, Events, ChannelType} = require('discord.js');
 const {talk, replyInDM} = require('./plugin/talk');
 const {readBackupChannel} = require('./plugin/mysql');
 const {prefix} = require('./plugin/prefix');
 const {isUnauthorizedEveryone} = require('./plugin/permission');
 const config = require('./config');
-const prefixM = require('./config').prefix;
+const prefixM = config.prefix;
 
 const client = new Client({
     intents: [
@@ -31,7 +31,7 @@ client.login(config.token).catch(error => {
 });
 
 // 準備
-client.on('ready', () => {
+client.once(Events.ClientReady, () => {
     client.user.setActivity({ type: ActivityType.Custom, name: 'custom', state: `⚔️ [${prefixM}help] 基礎神聖語!` });
     console.log(`[Ready] Logged in as ${client.user.tag}!`);
 });
@@ -77,7 +77,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 // 訊息觸發
-client.on('messageCreate',async message => {
+client.on(Events.MessageCreate, message => {
 
     if(message.author.bot) return;
 
@@ -86,7 +86,7 @@ client.on('messageCreate',async message => {
         return;
     }
 
-    if(message.channel.type == 1){
+    if(message.channel.type === ChannelType.DM){
         replyInDM(message);
         return;
     }
@@ -95,12 +95,10 @@ client.on('messageCreate',async message => {
     }else{
         talk(message);
     }
-    return;
-
 });
 
 // 刪除訊息觸發
-client.on('messageDelete', async message => {
+client.on(Events.MessageDelete, async message => {
     try {
         // DMs have no guild; uncached (partial) messages have no author/content to back up.
         if(!message.guild || message.partial || !message.author) return;
@@ -126,20 +124,6 @@ client.on('messageDelete', async message => {
         console.error('[messageDelete]', error);
     }
 });
-
-//反應訊息觸發
-//可Fetch之前的訊息
-client.on('messageReactionAdd', async function(messageReaction, user){
-
-    if (messageReaction.message.partial) await messageReaction.message.fetch();
-  
-    if(messageReaction.message.content === 'Message'){
-        if(user.bot){return}
-        messageReaction.message.reply('It works.')
-    }
-    
-});
-
 
 // Last-resort guard so one failed promise doesn't take the whole bot down.
 process.on('unhandledRejection', error => {

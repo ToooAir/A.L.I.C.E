@@ -1,5 +1,5 @@
 const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
-const {createGulidRole, deleteGulidRole, searchGuildRoleByRoleId} = require('../plugin/mysql');
+const {createGuildRole, deleteGuildRole, searchGuildRoleByRoleId} = require('../plugin/mysql');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -29,7 +29,7 @@ module.exports = {
                 if(await searchGuildRoleByRoleId(roleId) != undefined){
                     await interaction.reply(`<@&${roleId}>之前已經加入過了`);
                 }else{
-                    await createGulidRole(guildId, roleId);
+                    await createGuildRole(guildId, roleId);
                     await interaction.reply(`成功將<@&${roleId}>加入至guild`);
                 }
                 break;
@@ -38,7 +38,7 @@ module.exports = {
             case 'delete': {
                 const roleId = interaction.options.getRole('role').id;
 
-                const deleted = await deleteGulidRole(guildId, roleId);
+                const deleted = await deleteGuildRole(guildId, roleId);
                 if(deleted > 0){
                     await interaction.reply(`已將<@&${roleId}>從guild中移除`);
                 }else{

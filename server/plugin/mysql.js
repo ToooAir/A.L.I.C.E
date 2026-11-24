@@ -60,7 +60,7 @@ async function deleteBackupChannel(guildId){
     await query('DELETE FROM backup WHERE guildId = ?', [guildId]);
 }
 
-async function createGulidRole(guildId, roleId){
+async function createGuildRole(guildId, roleId){
     const results = await query('INSERT INTO guild_role (guildId,roleId) VALUES (?, ?);', [guildId, roleId]);
     console.log('[SQL insert] Inserted ' + results.affectedRows + ' row(s) from guild_role.');
 }
@@ -76,7 +76,7 @@ async function searchGuildRoleByRoleId(roleId){
     return results[0];
 }
 
-async function deleteGulidRole(guildId, roleId){
+async function deleteGuildRole(guildId, roleId){
     const results = await query('DELETE FROM guild_role WHERE guildId = ? AND roleId = ?', [guildId, roleId]);
     return results.affectedRows;
 }
@@ -92,8 +92,8 @@ module.exports = {
     updateBackupChannel: updateBackupChannel,
     readBackupChannel: readBackupChannel,
     deleteBackupChannel: deleteBackupChannel,
-    createGulidRole: createGulidRole,
+    createGuildRole: createGuildRole,
     readGuildRole: readGuildRole,
-    deleteGulidRole: deleteGulidRole,
+    deleteGuildRole: deleteGuildRole,
     searchGuildRoleByRoleId: searchGuildRoleByRoleId,
 }
