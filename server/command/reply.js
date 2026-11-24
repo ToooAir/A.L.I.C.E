@@ -12,13 +12,13 @@ module.exports = {
             command
             .setName('add')
             .setDescription('新增關鍵字')
-            .addStringOption(option => option.setName('input').setDescription('輸入一個字串').setRequired(true))
-            .addStringOption(option => option.setName('output').setDescription('輸出一個字串').setRequired(true)))
+            .addStringOption(option => option.setName('input').setDescription('輸入一個字串').setRequired(true).setMaxLength(256))
+            .addStringOption(option => option.setName('output').setDescription('輸出一個字串').setRequired(true).setMaxLength(1024)))
         .addSubcommand(command => 
             command
             .setName('delete')
             .setDescription('刪除關鍵字')
-            .addStringOption(option => option.setName('input').setDescription('輸入一個字串').setRequired(true)))
+            .addStringOption(option => option.setName('input').setDescription('輸入一個字串').setRequired(true).setMaxLength(256)))
         .addSubcommand(command => 
             command
             .setName('search')
