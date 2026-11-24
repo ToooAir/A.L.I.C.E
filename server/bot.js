@@ -5,6 +5,7 @@ const {Client, GatewayIntentBits, EmbedBuilder, ActivityType, Partials, Collecti
 const {talk, replyInDM} = require('./plugin/talk');
 const {readBackupChannel} = require('./plugin/mysql');
 const {prefix} = require('./plugin/prefix');
+const {isUnauthorizedEveryone} = require('./plugin/permission');
 const config = require('./config');
 const prefixM = require('./config').prefix;
 
@@ -81,8 +82,8 @@ client.on('messageCreate',async message => {
 
     if(message.author.bot) return;
 
-    if(message.content.includes('@everyone')){
-        message.delete();
+    if(isUnauthorizedEveryone(message)){
+        message.delete().catch(error => console.error('[@everyone filter]', error));
         return;
     }
 

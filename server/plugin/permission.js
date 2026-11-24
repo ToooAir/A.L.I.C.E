@@ -1,4 +1,5 @@
 'use strict';
+const {PermissionFlagsBits} = require('discord.js');
 
 /**
  * Check whether the invoking member may hand out `role`.
@@ -26,6 +27,18 @@ async function checkAssignableRole(interaction, role){
     return null;
 }
 
+/**
+ * Whether a guild message contains "@everyone" typed by someone who is not allowed to mention everyone
+ * in that channel. Checks the text rather than `message.mentions.everyone`, because Discord reports
+ * no mention at all when the author lacks the permission — which is exactly the case we want to catch.
+ */
+function isUnauthorizedEveryone(message){
+    if(!message.guild || !message.member) return false; // DMs: nothing to moderate (and can't delete)
+    if(!message.content.includes('@everyone')) return false;
+    return !message.member.permissionsIn(message.channel).has(PermissionFlagsBits.MentionEveryone);
+}
+
 module.exports = {
     checkAssignableRole: checkAssignableRole,
+    isUnauthorizedEveryone: isUnauthorizedEveryone,
 }
