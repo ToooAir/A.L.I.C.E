@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Secrets: mounted at runtime, never copied into the image
+server/config.js

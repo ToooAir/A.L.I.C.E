@@ -23,7 +23,11 @@ const client = new Client({
 
 
 // 登入
-client.login(config.token);
+client.login(config.token).catch(error => {
+    // Exit non-zero so the process manager (pm2 / Docker restart policy) sees the failure and retries.
+    console.error('[Login failed]', error);
+    process.exit(1);
+});
 
 // 準備
 client.on('ready', () => {

@@ -1,0 +1,20 @@
+services:
+  alice:
+    build: .
+    image: alice-bot
+    container_name: alice
+    restart: unless-stopped
+    # Share the VM's network so MySQL at 127.0.0.1 is reachable without changing config.js (Linux hosts only).
+    network_mode: host
+    # Forward SIGTERM properly so `docker compose stop` doesn't hang for 10s.
+    init: true
+    environment:
+      # /clear parses user-entered times in local time; containers default to UTC.
+      TZ: Asia/Taipei
+    volumes:
+      - ./server/config.js:/app/server/config.js:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
