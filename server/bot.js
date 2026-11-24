@@ -100,19 +100,23 @@ client.on(Events.MessageDelete, async message => {
     try {
         // DMs have no guild; uncached (partial) messages have no author/content to back up.
         if(!message.guild || message.partial || !message.author) return;
+        // Alice's own messages (search results, backups, ...) aren't worth backing up.
+        if(message.author.id === client.user.id) return;
 
         const result = await readBackupChannel(message.guild.id);
         if(result === undefined) return;
 
         const backupChannel = message.guild.channels.cache.get(result['channelId']);
-        if(!backupChannel) return;
+        // Deleting something inside the backup channel itself shouldn't produce another backup.
+        if(!backupChannel || message.channelId === backupChannel.id) return;
 
         const memberId = message.member?.id ?? message.author.id;
 
         const embed = new EmbedBuilder()
         .setColor('#FF2D2D')
         .setAuthor({name:message.author.tag, iconURL:message.author.avatarURL() ?? undefined})
-        .setDescription(`🗑 <@!${memberId}>在<#${message.channel.id}>的訊息被刪除了\n${message.content}`)
+        // Embed descriptions max out at 4096 characters; long (Nitro) messages are truncated.
+        .setDescription(`🗑 <@!${memberId}>在<#${message.channel.id}>的訊息被刪除了\n${message.content}`.slice(0, 4096))
         .setTimestamp()
         .setFooter({text:'訊息ID：' + message.id});
 

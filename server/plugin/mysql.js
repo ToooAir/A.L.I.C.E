@@ -33,7 +33,9 @@ async function deleteReply(input, guildId){
 }
 
 async function searchReply(input, guildId){
-    const results = await query('SELECT * FROM reply WHERE guildId = ? AND (input LIKE ? or output LIKE ?) ORDER BY id DESC', [guildId, '%'+input+'%', '%'+input+'%']);
+    // Escape LIKE wildcards so searching for "%" or "_" matches them literally.
+    const pattern = '%' + input.replace(/[\\%_]/g, '\\$&') + '%';
+    const results = await query('SELECT * FROM reply WHERE guildId = ? AND (input LIKE ? or output LIKE ?) ORDER BY id DESC', [guildId, pattern, pattern]);
     console.log('[SQL search] Selected ' + results.length + ' row(s) from reply.');
     return results;
 }

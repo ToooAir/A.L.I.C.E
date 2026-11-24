@@ -73,7 +73,7 @@ module.exports = {
             }
 
             case 'help':
-                interaction.reply({content:'連神聖語都念不好的孩子呢......', embeds:[replyHelp()]});
+                await interaction.reply({content:'連神聖語都念不好的孩子呢......', embeds:[replyHelp()]});
                 break;
         }
 	},

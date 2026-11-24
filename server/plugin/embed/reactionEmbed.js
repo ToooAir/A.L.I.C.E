@@ -71,15 +71,17 @@ const awaitReactions = async (interaction, m, options, filter, pages) => {
     });
     reactionCollector.on('end', (collected, reason) => {
         if(reason == 'time'){
-            m.reactions.removeAll();
-            m.react('🚫');
+            // Needs Manage Messages; failures are harmless.
+            m.reactions.removeAll().catch(console.error);
+            m.react('🚫').catch(console.error);
         }
     });
 
 }
 
 const removeReaction = async (m, interaction, emoji) => {
-    try { m.reactions.cache.find(r => r.emoji.name == emoji).users.remove(interaction.user); } catch(err) {};
+    const reaction = m.reactions.cache.find(r => r.emoji.name == emoji);
+    await reaction?.users.remove(interaction.user).catch(console.error);
 }
 
 function searchEmbed(){
