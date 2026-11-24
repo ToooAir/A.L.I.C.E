@@ -16,5 +16,7 @@ module.exports = {
     clientId: clientId,
     token: token,
     prefix: prefix,
-    mysqlConnect:mysqlConnect
+    mysqlConnect:mysqlConnect,
+    // Optional: category IDs whose channels are ranked by *rank (defaults to TVPC's categories)
+    // rankCategoryIds: ['1004665762453143612', '811570519216226304'],
 }
