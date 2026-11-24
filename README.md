@@ -99,7 +99,6 @@
 | `/give-role` | 給予成員身分組 | 管理身分組 |
 | `/give-role-with-role` | 批次給予身分組 | 管理身分組 |
 | `/rank` | 討論區訊息量排序 | 管理頻道 |
-| `*help` | 舊指令說明 | 所有人 |
 
 ## 部署
 
@@ -129,7 +128,6 @@ cp server/config-sample.js server/config.js     # 再填入下列設定
 |---|---|
 | `clientId` | 應用程式 ID |
 | `token` | Bot token（**不要 commit**，已列在 `.gitignore`） |
-| `prefix` | 舊指令前綴，預設 `*` |
 | `mysqlConnect` | MySQL 連線資訊 |
 | `rankCategoryIds` | （選填）`/rank` 預設排序的分類 ID |
 
@@ -152,6 +150,7 @@ npm start
 ### 注意事項
 
 - **從舊版升級時**重新執行一次 `schema.sql`：只會建立缺少的資料表，既有資料不受影響
+- `config.js` 裡舊的 `prefix` 設定已不再使用，留著也沒關係
 - **新增或修改斜線指令後**要重新執行 `deploy-commands`，bot 啟動時不會自動註冊
 - `docker-compose.yml` 使用 host 網路，讓容器能連到同一台主機上 `127.0.0.1` 的 MySQL（僅適用 Linux 主機）
 - `config.js` 以唯讀方式掛載進容器，不會被打包進 image
@@ -171,7 +170,6 @@ server/
     ├── mysql.js            資料庫存取
     ├── talk.js             關鍵字回覆與聊天反應
     ├── activity.js         各頻道每日訊息數統計（/rank）
-    ├── prefix.js           舊的前綴指令（*help）
     ├── permission.js       身分組位階與 @everyone 權限檢查
     └── embed/              Embed 訊息樣式
 ```

@@ -4,11 +4,9 @@ const path = require('node:path');
 const {Client, GatewayIntentBits, EmbedBuilder, ActivityType, Partials, Collection, Events, ChannelType} = require('discord.js');
 const {talk, replyInDM} = require('./plugin/talk');
 const {readBackupChannel} = require('./plugin/mysql');
-const {prefix} = require('./plugin/prefix');
 const {isUnauthorizedEveryone} = require('./plugin/permission');
 const {recordMessage} = require('./plugin/activity');
 const config = require('./config');
-const prefixM = config.prefix;
 
 const client = new Client({
     intents: [
@@ -33,7 +31,7 @@ client.login(config.token).catch(error => {
 
 // 準備
 client.once(Events.ClientReady, () => {
-    client.user.setActivity({ type: ActivityType.Custom, name: 'custom', state: `⚔️ [${prefixM}help] 基礎神聖語!` });
+    client.user.setActivity({ type: ActivityType.Custom, name: 'custom', state: '⚔️ 輸入 / 使用指令' });
     console.log(`[Ready] Logged in as ${client.user.tag}!`);
 });
 
@@ -94,11 +92,7 @@ client.on(Events.MessageCreate, message => {
 
     recordMessage(message);
 
-    if(message.content.startsWith(prefixM)){
-        prefix(message);
-    }else{
-        talk(message);
-    }
+    talk(message);
 });
 
 // 刪除訊息觸發

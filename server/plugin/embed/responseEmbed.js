@@ -1,20 +1,4 @@
 const {EmbedBuilder} = require('discord.js');
-const prefixM = require('../../config').prefix;
-
-function help(){
-    const embed = new EmbedBuilder()
-        .setColor('#46A3FF')
-        .setTitle('舊神聖語指令')
-        .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
-        .setDescription('這是目前我所知道的舊神聖語')
-        .addFields([
-            {name:'討論區水量排序', value: prefixM + 'rank 已改為 /rank'},
-            {name:'其他指令', value:'請輸入 / 叫出斜線指令選單'},
-        ])
-        .setTimestamp()
-
-    return embed;
-}
 
 function replyHelp(){
     const embed = new EmbedBuilder()
@@ -136,7 +120,6 @@ async function guildEmbed(interaction, results){
 
 
 module.exports = {
-    help: help,
     replyHelp: replyHelp,
     replyAdd: replyAdd,
     replyUpdate: replyUpdate,

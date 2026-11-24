@@ -1,7 +1,6 @@
 //rename this to config.js
 const clientId = ""; //discord bot id
 const token = ''; //discord bot token
-const prefix = '*';
 const mysqlConnect =
 {
     host: '',
@@ -15,7 +14,6 @@ const mysqlConnect =
 module.exports = {
     clientId: clientId,
     token: token,
-    prefix: prefix,
     mysqlConnect:mysqlConnect,
     // Optional: category IDs ranked by /rank when no category is given (defaults to TVPC's categories)
     // rankCategoryIds: ['1004665762453143612', '811570519216226304'],
