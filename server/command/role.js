@@ -1,5 +1,6 @@
 const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
 const {checkAssignableRole} = require('../plugin/permission');
+const {ensureMembersCached} = require('../tool');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -19,6 +20,8 @@ module.exports = {
             return;
         }
         await interaction.deferReply({ephemeral: true});
+        // role.members only sees cached members; load everyone first so nobody is skipped.
+        await ensureMembersCached(interaction.guild);
         await Promise.all(memberRole.members.map(member => member.roles.add(giveRole)));
         await interaction.editReply('給予成功');
 	},

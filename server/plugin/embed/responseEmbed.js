@@ -1,4 +1,5 @@
 const {EmbedBuilder} = require('discord.js');
+const {ensureMembersCached} = require('../../tool');
 
 function replyHelp(){
     const embed = new EmbedBuilder()
@@ -85,10 +86,6 @@ const MAX_ROLE_FIELDS = 21;
 // Fetch the full member list only once per guild. After that the GuildMembers / GuildPresences intents
 // keep the cache current through join/leave/presence events, so repeat calls skip the slow,
 // rate-limited member download.
-async function ensureMembersCached(guild){
-    if (guild.members.cache.size < guild.memberCount) await guild.members.fetch();
-}
-
 async function guildEmbed(interaction, results){
     const guild = interaction.guild;
     await ensureMembersCached(guild);

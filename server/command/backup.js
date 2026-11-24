@@ -1,4 +1,4 @@
-const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, ChannelType} = require('discord.js');
 const {createBackupChannel, readBackupChannel, updateBackupChannel, deleteBackupChannel} = require('../plugin/mysql');
 
 module.exports = {
@@ -11,7 +11,8 @@ module.exports = {
             command
             .setName('add')
             .setDescription('新增頻道來儲存備份訊息')
-            .addChannelOption(option => option.setName('channel').setDescription('選擇頻道').setRequired(true)))
+            .addChannelOption(option => option.setName('channel').setDescription('選擇頻道').setRequired(true)
+            .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)))
         .addSubcommand(command => 
             command
             .setName('delete')

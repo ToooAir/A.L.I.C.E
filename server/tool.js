@@ -9,4 +9,9 @@ module.exports = {
 	random: (list) => {
 		return list[Math.floor((Math.random() * list.length))];
 	},
+
+	// Fetch the full member list once; afterwards the GuildMembers intent keeps the cache current.
+	ensureMembersCached: async (guild) => {
+		if (guild.members.cache.size < guild.memberCount) await guild.members.fetch();
+	},
 }

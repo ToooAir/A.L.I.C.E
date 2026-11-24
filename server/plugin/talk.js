@@ -13,7 +13,11 @@ function talk(message){
 async function sendKeywordReply(message, result){
     if(result === undefined) return;
     const answers = result['output'].split('^');
-    await message.channel.send(random(answers).replaceAll('{m}', message.author.toString()));
+    // Replies are user-defined: allow user pings only, so /reply can't be used to make the bot ping @everyone or roles.
+    await message.channel.send({
+        content: random(answers).replaceAll('{m}', message.author.toString()),
+        allowedMentions: {parse: ['users']},
+    });
 }
 
 function replyInDM(message){

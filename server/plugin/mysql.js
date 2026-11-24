@@ -28,7 +28,8 @@ async function updateReply(input, output, guildId){
 }
 
 async function deleteReply(input, guildId){
-    await query('DELETE FROM reply WHERE guildId = ? AND input = ?', [guildId, input]);
+    const results = await query('DELETE FROM reply WHERE guildId = ? AND input = ?', [guildId, input]);
+    return results.affectedRows;
 }
 
 async function searchReply(input, guildId){

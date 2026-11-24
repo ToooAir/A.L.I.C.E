@@ -1,31 +1,36 @@
 'use strict';
 const {EmbedBuilder} = require('discord.js');
 
-async function reactionEmbed(interaction, result){
+// Discord rejects an embed whose text adds up to more than 6000 characters, so a page holds
+// at most 10 results and stops early once the next field would push it past the budget.
+const FIELDS_PER_PAGE = 10;
+const PAGE_CHAR_BUDGET = 5500; // leaves room for title, description and footer
 
+function paginate(result){
+    const pages = [];
+    let current = [];
+    let chars = 0;
+    for(const row of result){
+        const size = row['input'].length + row['output'].length;
+        if(current.length > 0 && (current.length === FIELDS_PER_PAGE || chars + size > PAGE_CHAR_BUDGET)){
+            pages.push(current);
+            current = [];
+            chars = 0;
+        }
+        current.push({name: row['input'], value: row['output']});
+        chars += size;
+    }
+    if(current.length > 0) pages.push(current);
+    return pages.map((fields, i) => searchEmbed().addFields(fields).setFooter({text:`page${i + 1}/${pages.length}`}));
+}
+
+async function reactionEmbed(interaction, result){
+    const pages = paginate(result);
     const options = {
         limit: 30 * 1000,
         min: 0,
-        max: Math.floor((result.length-1)/10),
+        max: pages.length - 1,
         page: 0
-    }
-    const pages = [];
-
-    var embed = searchEmbed();
-
-    for(var i=0; i<result.length; i++){
-        if(i%10 == 0 && i != 0){
-            embed.setFooter({text:'page'+ (Math.floor(i/10)) + '/' + (options.max+1)})
-            pages.push(embed);
-            embed = searchEmbed();
-        }
-
-        embed.addFields([{name: result[i]['input'] , value: result[i]['output']}]);
-
-        if(i+1 == result.length){
-            embed.setFooter({text:'page'+ (Math.floor(i/10)+1) + '/' + (options.max+1)})
-            pages.push(embed);
-        }
     }
 
     const m = await interaction.reply({ embeds:[pages[options.page]], fetchReply: true});

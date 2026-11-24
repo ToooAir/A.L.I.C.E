@@ -53,7 +53,10 @@ module.exports = {
 
             case 'delete': {
                 const input = interaction.options.getString('input');
-                await deleteReply(input, guildId);
+                if(await deleteReply(input, guildId) === 0){
+                    await interaction.reply({content:'找不到這個關鍵字', ephemeral: true});
+                    return;
+                }
                 await interaction.reply({embeds:[replyDelete(input,interaction.user)]});
                 break;
             }
