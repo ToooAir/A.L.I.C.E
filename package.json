@@ -5,7 +5,8 @@
   "main": "alice.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node alice.js"
+    "start": "node alice.js",
+    "deploy-commands": "node server/regCommand.js"
   },
   "author": "ToooAir",
   "license": "ISC",

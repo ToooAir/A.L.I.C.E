@@ -1,3 +1,6 @@
+// Registers the slash commands in server/command with Discord (global commands).
+// Run only after adding/changing commands: `npm run deploy-commands`
+// (Docker: `docker compose run --rm alice npm run deploy-commands`).
 const { REST, Routes } = require('discord.js');
 const { clientId, token } = require('./config');
 const fs = require('node:fs');
@@ -23,7 +26,7 @@ const rest = new REST({ version: '10' }).setToken(token);
 	try {
 		console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-		// The put method is used to fully refresh all commands in the guild with the current set
+		// PUT replaces the full set of global commands with the current set
 		const data = await rest.put(
             Routes.applicationCommands(clientId),
             { body: commands },
@@ -31,7 +34,7 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
 	} catch (error) {
-		// And of course, make sure you catch and log any errors!
 		console.error(error);
+		process.exitCode = 1;
 	}
 })();

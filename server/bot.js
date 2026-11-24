@@ -34,7 +34,6 @@ client.login(config.token).catch(error => {
 client.on('ready', () => {
     client.user.setActivity({ type: ActivityType.Custom, name: 'custom', state: `⚔️ [${prefixM}help] 基礎神聖語!` });
     console.log(`[Ready] Logged in as ${client.user.tag}!`);
-    require('./regCommand.js');
 });
 
 client.commands = new Collection();
