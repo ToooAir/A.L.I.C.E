@@ -28,3 +28,13 @@ CREATE TABLE IF NOT EXISTS `guild_role` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `roleId` (`roleId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Daily message count per channel for /rank (thread messages count toward the parent channel).
+-- Added 2026-11-24; on an existing database, running this whole file only creates this table.
+CREATE TABLE IF NOT EXISTS `channel_activity` (
+  `guildId` varchar(27) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `channelId` varchar(27) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `day` date NOT NULL,
+  `count` int unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`guildId`,`channelId`,`day`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

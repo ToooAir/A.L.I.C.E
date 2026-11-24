@@ -8,7 +8,8 @@ function help(){
         .setAuthor({name:'愛麗絲', iconURL:'https://i.imgur.com/8hLIxzh.jpg'})
         .setDescription('這是目前我所知道的舊神聖語')
         .addFields([
-            {name:'討論區水量排序(with CSV)', value: prefixM + 'rank'},
+            {name:'討論區水量排序', value: prefixM + 'rank 已改為 /rank'},
+            {name:'其他指令', value:'請輸入 / 叫出斜線指令選單'},
         ])
         .setTimestamp()
 

@@ -6,6 +6,7 @@ const {talk, replyInDM} = require('./plugin/talk');
 const {readBackupChannel} = require('./plugin/mysql');
 const {prefix} = require('./plugin/prefix');
 const {isUnauthorizedEveryone} = require('./plugin/permission');
+const {recordMessage} = require('./plugin/activity');
 const config = require('./config');
 const prefixM = config.prefix;
 
@@ -90,6 +91,9 @@ client.on(Events.MessageCreate, message => {
         replyInDM(message);
         return;
     }
+
+    recordMessage(message);
+
     if(message.content.startsWith(prefixM)){
         prefix(message);
     }else{

@@ -81,6 +81,21 @@ async function deleteGuildRole(guildId, roleId){
     return results.affectedRows;
 }
 
+async function incrementChannelActivity(guildId, channelId, day){
+    await query('INSERT INTO channel_activity (guildId, channelId, day, count) VALUES (?, ?, ?, 1) ON DUPLICATE KEY UPDATE count = count + 1', [guildId, channelId, day]);
+}
+
+// Total messages per channel from `sinceDay` (YYYY-MM-DD, inclusive) to now.
+async function readChannelActivity(guildId, sinceDay){
+    return query('SELECT channelId, CAST(SUM(count) AS UNSIGNED) AS total FROM channel_activity WHERE guildId = ? AND day >= ? GROUP BY channelId', [guildId, sinceDay]);
+}
+
+// First day with any recorded activity (YYYY-MM-DD), or null if nothing has been recorded yet.
+async function readActivityStartDay(guildId){
+    const results = await query("SELECT DATE_FORMAT(MIN(day), '%Y-%m-%d') AS firstDay FROM channel_activity WHERE guildId = ?", [guildId]);
+    return results[0].firstDay;
+}
+
 module.exports = {
     createReply: createReply,
     readReply: readReply,
@@ -96,4 +111,7 @@ module.exports = {
     readGuildRole: readGuildRole,
     deleteGuildRole: deleteGuildRole,
     searchGuildRoleByRoleId: searchGuildRoleByRoleId,
+    incrementChannelActivity: incrementChannelActivity,
+    readChannelActivity: readChannelActivity,
+    readActivityStartDay: readActivityStartDay,
 }

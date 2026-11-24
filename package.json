@@ -11,7 +11,6 @@
   "author": "ToooAir",
   "license": "ISC",
   "dependencies": {
-    "csv-string": "^4.1.0",
     "discord.js": "^14.2.0",
     "mysql2": "^3.24.6"
   },

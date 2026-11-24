@@ -62,17 +62,17 @@
 
 ### 5. 討論區訊息量排序
 
-![rank](https://i.imgur.com/fSDm2MU.gif)
+```
+/rank {天數} {分類}
+```
 
-傳送 `*rank` 並附上 CSV 檔，愛麗絲會依訊息數排序指定分類下的頻道。CSV 使用的欄位：
+依最近幾天的訊息數排序分類底下的頻道，用來找出熱門或冷門的討論區。
 
-| 欄位 | 內容 |
-|---|---|
-| 第 1 欄 | 日期（顯示於標題） |
-| 第 3 欄 | 頻道 ID |
-| 第 6 欄 | 訊息數 |
-
-要排序的分類可以在 `config.js` 的 `rankCategoryIds` 設定。
+- 愛麗絲會自己累積每個頻道每天的訊息數（只存數字，不存訊息內容），不需要再上傳 CSV
+- 天數 1–90，預設 7 天（含今天）；沒選分類時使用 `config.js` 的 `rankCategoryIds`
+- 討論串與論壇貼文的訊息算在上層頻道；bot 的訊息不計算
+- 沒有訊息的頻道也會列出（0 則），排在最後
+- 資料從功能上線那天開始累積，查詢範圍更早時會標註資料起始日
 
 ### 其他
 
@@ -98,7 +98,7 @@
 | `/clear` | 批次刪除訊息 | 管理訊息 |
 | `/give-role` | 給予成員身分組 | 管理身分組 |
 | `/give-role-with-role` | 批次給予身分組 | 管理身分組 |
-| `*rank` | 討論區排序（附 CSV） | 管理頻道 |
+| `/rank` | 討論區訊息量排序 | 管理頻道 |
 | `*help` | 舊指令說明 | 所有人 |
 
 ## 部署
@@ -131,7 +131,7 @@ cp server/config-sample.js server/config.js     # 再填入下列設定
 | `token` | Bot token（**不要 commit**，已列在 `.gitignore`） |
 | `prefix` | 舊指令前綴，預設 `*` |
 | `mysqlConnect` | MySQL 連線資訊 |
-| `rankCategoryIds` | （選填）`*rank` 要排序的分類 ID |
+| `rankCategoryIds` | （選填）`/rank` 預設排序的分類 ID |
 
 ### 3. 啟動
 
@@ -151,6 +151,7 @@ npm start
 
 ### 注意事項
 
+- **從舊版升級時**重新執行一次 `schema.sql`：只會建立缺少的資料表，既有資料不受影響
 - **新增或修改斜線指令後**要重新執行 `deploy-commands`，bot 啟動時不會自動註冊
 - `docker-compose.yml` 使用 host 網路，讓容器能連到同一台主機上 `127.0.0.1` 的 MySQL（僅適用 Linux 主機）
 - `config.js` 以唯讀方式掛載進容器，不會被打包進 image
@@ -169,7 +170,8 @@ server/
 └── plugin/
     ├── mysql.js            資料庫存取
     ├── talk.js             關鍵字回覆與聊天反應
-    ├── prefix.js           舊的前綴指令（*help、*rank）
+    ├── activity.js         各頻道每日訊息數統計（/rank）
+    ├── prefix.js           舊的前綴指令（*help）
     ├── permission.js       身分組位階與 @everyone 權限檢查
     └── embed/              Embed 訊息樣式
 ```
