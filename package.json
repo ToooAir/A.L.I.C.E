@@ -4,9 +4,10 @@
   "description": "discord bot for TVPC",
   "main": "alice.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test test/unit/*.test.js",
     "start": "node alice.js",
-    "deploy-commands": "node server/regCommand.js"
+    "deploy-commands": "node server/regCommand.js",
+    "test:db": "node --test test/db/*.test.js"
   },
   "author": "ToooAir",
   "license": "ISC",

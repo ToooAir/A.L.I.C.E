@@ -6,6 +6,7 @@
 - [指令一覽](#指令一覽)
 - [部署](#部署)
 - [專案結構](#專案結構)
+- [測試](#測試)
 - [Q&A](#qa)
 
 ## 功能
@@ -160,6 +161,7 @@ npm start
 
 ```
 alice.js                    進入點
+test/                       單元測試（unit/）與資料庫整合測試（db/）
 schema.sql                  資料表結構
 server/
 ├── bot.js                  Discord client 與事件處理
@@ -175,6 +177,27 @@ server/
 ```
 
 新增斜線指令：在 `server/command/` 新增檔案並匯出 `data`（`SlashCommandBuilder`）與 `execute(interaction)`，再執行 `npm run deploy-commands`。
+
+## 測試
+
+使用 Node 內建的 `node:test`，不需要額外安裝套件。
+
+```bash
+npm test          # 單元測試：不需要資料庫，也不會連到 Discord
+npm run test:db   # 資料庫整合測試：需要一個 MySQL
+```
+
+`test:db` 預設連到 `127.0.0.1:33306` 的 `alice_test` 資料庫（帳號 `root` / `testpw`），可以用一個暫時的容器：
+
+```bash
+docker run -d --rm --name alice-test-db -e MYSQL_ROOT_PASSWORD=testpw -p 33306:3306 mysql:8.4
+npm run test:db
+docker stop alice-test-db
+```
+
+連線資訊可以用 `TEST_MYSQL_HOST`、`TEST_MYSQL_PORT`、`TEST_MYSQL_USER`、`TEST_MYSQL_PASSWORD`、`TEST_MYSQL_DATABASE` 覆寫。整合測試會清空資料表，所以資料庫名稱必須以 `_test` 結尾，否則會拒絕執行。
+
+測試一律使用 `test/helpers/config.js`，不會讀取 `server/config.js`，也就不會碰到正式的 token 或資料庫。
 
 ## Q&A
 
