@@ -1,11 +1,11 @@
-const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, InteractionContextType} = require('discord.js');
 const {createGuildRole, deleteGuildRole, searchGuildRoleByRoleId} = require('../plugin/mysql');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('guild-role')
 		.setDescription('伺服器資訊')
-		.setDMPermission(false)
+		.setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand(command => 
             command

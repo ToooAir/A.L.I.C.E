@@ -1,4 +1,4 @@
-const {SlashCommandBuilder } = require('discord.js');
+const {SlashCommandBuilder, MessageFlags, InteractionContextType} = require('discord.js');
 const {replyHelp,replyAdd,replyUpdate,replyDelete} = require('../plugin/embed/responseEmbed');
 const {reactionEmbed} = require('../plugin/embed/reactionEmbed');
 const {createReply,readReply,updateReply,deleteReply, searchReply} = require('../plugin/mysql');
@@ -7,7 +7,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('reply')
 		.setDescription('關鍵字回覆')
-        .setDMPermission(false)
+        .setContexts(InteractionContextType.Guild)
         .addSubcommand(command => 
             command
             .setName('add')
@@ -38,7 +38,7 @@ module.exports = {
                 const input = interaction.options.getString('input');
                 const output = interaction.options.getString('output');
                 if(output.length > 1024){
-                    await interaction.reply({content:'你的回覆內容超過1024個字, 麻煩刪減至1024個字內喔', ephemeral: true});
+                    await interaction.reply({content:'你的回覆內容超過1024個字, 麻煩刪減至1024個字內喔', flags: MessageFlags.Ephemeral});
                     return;
                 };
                 if(await readReply(input, guildId) != undefined){
@@ -54,7 +54,7 @@ module.exports = {
             case 'delete': {
                 const input = interaction.options.getString('input');
                 if(await deleteReply(input, guildId) === 0){
-                    await interaction.reply({content:'找不到這個關鍵字', ephemeral: true});
+                    await interaction.reply({content:'找不到這個關鍵字', flags: MessageFlags.Ephemeral});
                     return;
                 }
                 await interaction.reply({embeds:[replyDelete(input,interaction.user)]});
@@ -65,7 +65,7 @@ module.exports = {
                 const input = interaction.options.getString('input') ?? '';
                 const result = await searchReply(input, guildId);
                 if(result.length == 0){
-                    await interaction.reply({content:'找不到符合的關鍵字', ephemeral: true});
+                    await interaction.reply({content:'找不到符合的關鍵字', flags: MessageFlags.Ephemeral});
                     return;
                 }
                 await reactionEmbed(interaction, result);

@@ -1,11 +1,11 @@
-const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, MessageFlags, InteractionContextType} = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('clear')
 		.setDescription('大規模訊息刪除')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
-        .setDMPermission(false)
+        .setContexts(InteractionContextType.Guild)
         .addIntegerOption(option => option.setName('year').setDescription('西元年').setRequired(true))
         .addIntegerOption(option => option.setName('month').setDescription('月').setRequired(true))
         .addIntegerOption(option => option.setName('day').setDescription('日').setRequired(true))
@@ -23,13 +23,13 @@ module.exports = {
         var now = interaction.createdTimestamp;
 
         if(now-before<0){
-            await interaction.reply({content:'你學會了時空支配術要刪除未來訊息?', ephemeral: true });
+            await interaction.reply({content:'你學會了時空支配術要刪除未來訊息?', flags: MessageFlags.Ephemeral });
         }else if(now-before>43200000){  
-            await interaction.reply({ content:'無法批次刪除超過12小時前的訊息', ephemeral: true });
+            await interaction.reply({ content:'無法批次刪除超過12小時前的訊息', flags: MessageFlags.Ephemeral });
         }else{
             let number = 0;
             let cursor;  // page backwards with `before` so each batch is a new set of messages
-            await interaction.reply({ content:'清掃🧹開始', fetchReply: true});
+            await interaction.reply({ content:'清掃🧹開始'});
             while(true){
                 const messages = await interaction.channel.messages.fetch({limit: 100, before: cursor});
                 if(messages.size == 0) break;

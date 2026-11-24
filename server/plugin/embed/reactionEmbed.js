@@ -33,7 +33,8 @@ async function reactionEmbed(interaction, result){
         page: 0
     }
 
-    const m = await interaction.reply({ embeds:[pages[options.page]], fetchReply: true});
+    const response = await interaction.reply({ embeds:[pages[options.page]], withResponse: true});
+    const m = response.resource.message;
 
     await m.react('⬅');
     await m.react('➡');

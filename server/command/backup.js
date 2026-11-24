@@ -1,4 +1,4 @@
-const {SlashCommandBuilder, PermissionFlagsBits, ChannelType} = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, ChannelType, InteractionContextType} = require('discord.js');
 const {createBackupChannel, readBackupChannel, updateBackupChannel, deleteBackupChannel} = require('../plugin/mysql');
 
 module.exports = {
@@ -6,7 +6,7 @@ module.exports = {
 		.setName('backup')
 		.setDescription('伺服器刪除訊息備份')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-        .setDMPermission(false)
+        .setContexts(InteractionContextType.Guild)
         .addSubcommand(command => 
             command
             .setName('add')

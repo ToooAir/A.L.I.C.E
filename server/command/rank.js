@@ -1,4 +1,4 @@
-const {SlashCommandBuilder, PermissionFlagsBits, ChannelType} = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags, InteractionContextType} = require('discord.js');
 const {readChannelActivity, readActivityStartDay} = require('../plugin/mysql');
 const {localDay} = require('../plugin/activity');
 const config = require('../config');
@@ -14,7 +14,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('rank')
 		.setDescription('依最近的訊息數排序分類底下的頻道')
-		.setDMPermission(false)
+		.setContexts(InteractionContextType.Guild)
 		.setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
 		.addIntegerOption(option => option.setName('days').setDescription(`統計最近幾天（預設 ${DEFAULT_DAYS}）`)
 			.setMinValue(1).setMaxValue(MAX_DAYS))
@@ -29,7 +29,7 @@ module.exports = {
 		const channels = interaction.guild.channels.cache
 			.filter(channel => !channel.isThread() && categoryIds.includes(channel.parentId));
 		if(channels.size === 0){
-			await interaction.reply({content:'這個分類底下沒有頻道可以排序', ephemeral:true});
+			await interaction.reply({content:'這個分類底下沒有頻道可以排序', flags: MessageFlags.Ephemeral});
 			return;
 		}
 

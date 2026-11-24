@@ -1,4 +1,4 @@
-const {SlashCommandBuilder, PermissionFlagsBits} = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, InteractionContextType} = require('discord.js');
 const {guildEmbed} = require('../plugin/embed/responseEmbed');
 const {readGuildRole} = require('../plugin/mysql');
 
@@ -6,7 +6,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('guild')
 		.setDescription('查看伺服器資訊')
-		.setDMPermission(false),
+		.setContexts(InteractionContextType.Guild),
 
 	async execute(interaction) {
         const guildId = interaction.guildId;

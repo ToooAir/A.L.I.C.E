@@ -1,11 +1,11 @@
-const {SlashCommandBuilder, PermissionFlagsBits, ChannelType} = require('discord.js');
+const {SlashCommandBuilder, PermissionFlagsBits, ChannelType, MessageFlags, InteractionContextType} = require('discord.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('broadcast')
 		.setDescription('使用機器人廣播訊息')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-        .setDMPermission(false)
+        .setContexts(InteractionContextType.Guild)
         .addChannelOption(option => option.setName('channel').setDescription('選擇頻道').setRequired(true)
             .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
         .addStringOption(option => option.setName('message').setDescription('輸入訊息').setRequired(true)),
@@ -14,6 +14,6 @@ module.exports = {
         const Inchannel = interaction.options.getChannel('channel');
         const message = interaction.options.getString('message');
         await Inchannel.send(message);
-		await interaction.reply({content:'廣播完成', ephemeral: true})
+		await interaction.reply({content:'廣播完成', flags: MessageFlags.Ephemeral})
 	},
 };

@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
-const {Client, GatewayIntentBits, EmbedBuilder, ActivityType, Partials, Collection, Events, ChannelType} = require('discord.js');
+const {Client, GatewayIntentBits, EmbedBuilder, ActivityType, Partials, Collection, Events, ChannelType, MessageFlags} = require('discord.js');
 const {talk, replyInDM} = require('./plugin/talk');
 const {readBackupChannel} = require('./plugin/mysql');
 const {isUnauthorizedEveryone} = require('./plugin/permission');
@@ -65,7 +65,7 @@ client.on(Events.InteractionCreate, async interaction => {
 		await command.execute(interaction);
 	} catch (error) {
 		console.error(error);
-		const errorReply = { content:'在執行這個指令的時候發生了錯誤！若持續發生請聯絡管理員🥺', ephemeral: true };
+		const errorReply = { content:'在執行這個指令的時候發生了錯誤！若持續發生請聯絡管理員🥺', flags: MessageFlags.Ephemeral };
 		try {
 			if (interaction.replied || interaction.deferred) await interaction.followUp(errorReply);
 			else await interaction.reply(errorReply);
