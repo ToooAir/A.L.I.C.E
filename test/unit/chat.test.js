@@ -84,13 +84,10 @@ test('sends the recent conversation with times and speakers', async () => {
 
     assert.equal(await chat.handle(message), true);
     const [request] = provider.chatRequests();
-    assert.deepEqual(request.messages, [
-        {role: 'user', content: '[13:48] 阿華: 今天好冷'},
-        {role: 'assistant', content: '請注意保暖。'},
-        {role: 'user', content: '[13:58] 小美: 想喝熱可可'},
-        {role: 'user', content: '[14:00] 小明: @愛麗絲 妳喜歡冬天嗎？'},
-    ]);
+    // Only the message being answered is the user turn; the channel is background in the system prompt.
+    assert.deepEqual(request.messages, [{role: 'user', content: '[14:00] 小明: @愛麗絲 妳喜歡冬天嗎？'}]);
     assert.ok(request.system.startsWith(SYSTEM_PROMPT));
+    assert.ok(request.system.endsWith('【頻道最近對話（背景）】\n[13:48] 阿華: 今天好冷\n[13:49] 愛麗絲: 請注意保暖。\n[13:58] 小美: 想喝熱可可'));
     assert.match(request.system, /【現在】台灣時間 2026-11-25 14:00/);
     assert.doesNotMatch(request.system, /安靜/);
     assert.equal(replies[0].content, '你好，我是愛麗絲。');
@@ -108,7 +105,9 @@ test('includes the message being replied to even when it is older', async () => 
     const {chat, provider} = setup();
     const old = channelMessage('12', '我明天要考試', 3 * 60, '阿華');
     await chat.handle(mention(`<@${BOT_ID}> 幫他加油`, {reference: old}).message);
-    assert.deepEqual(provider.chatRequests()[0].messages.map(m => m.content), ['[11:00] 阿華: 我明天要考試', '[14:00] 小明: @愛麗絲 幫他加油']);
+    const [request] = provider.chatRequests();
+    assert.match(request.system, /【頻道最近對話（背景）】\n\[11:00\] 阿華: 我明天要考試$/);
+    assert.deepEqual(request.messages, [{role: 'user', content: '[14:00] 小明（回覆 阿華）: @愛麗絲 幫他加油'}]);
 });
 
 test('remembers people across chats', async (t) => {
@@ -190,9 +189,9 @@ test('long input and output are cut to size', async () => {
     provider.reply = '長'.repeat(3000);
     const {message, replies} = mention('字'.repeat(5000), {history: [channelMessage('12', '長'.repeat(5000), 1)]});
     await chat.handle(message);
-    const [earlier, current] = provider.chatRequests()[0].messages;
-    assert.ok(earlier.content.length <= 300 + '[13:59] user12: '.length);
-    assert.ok(current.content.length <= 600 + '[14:00] 小明: '.length);
+    const [request] = provider.chatRequests();
+    assert.ok(request.system.split('\n').at(-1).length <= 300 + '[13:59] user12: '.length);
+    assert.ok(request.messages[0].content.length <= 600 + '[14:00] 小明: '.length);
     assert.equal(replies[0].content.length, 2000);
 });
 
@@ -336,5 +335,18 @@ test('Alice can read her own embeds in the context, with mentions made readable'
     const {chat, provider} = setup();
     const log = {...channelMessage(BOT_ID, '', 3), embeds: [{title: '排行榜', description: '<@!12> 在 <#34> 發言 50 則'}]};
     await chat.handle(mention(`<@${BOT_ID}> 這是什麼意思`, {history: [log]}).message);
-    assert.deepEqual(provider.chatRequests()[0].messages[0], {role: 'assistant', content: '排行榜 @某人 在 #頻道 發言 50 則'});
+    assert.match(provider.chatRequests()[0].system, /\[13:57\] 愛麗絲: 排行榜 @某人 在 #頻道 發言 50 則$/);
+});
+
+test('Alice sees who replied to whom and answers only the current message', async () => {
+    const {chat, provider} = setup();
+    const snow = channelMessage('12', '@愛麗絲 PY', 2, 'DeepSnow');
+    const alice = {...channelMessage(BOT_ID, '真名，請你好好冷靜一下', 1), reference: {messageId: snow.id}};
+    const {message} = mention('你找錯人了', {name: '伊織真名 [HSR]', mentionsAlice: false, history: [snow, alice], reference: alice});
+    message.mentions.repliedUser = {id: BOT_ID};
+    await chat.handle(message);
+
+    const [request] = provider.chatRequests();
+    assert.match(request.system, /\[13:59\] 愛麗絲（回覆 DeepSnow）: 真名，請你好好冷靜一下$/);
+    assert.deepEqual(request.messages, [{role: 'user', content: '[14:00] 伊織真名（回覆 愛麗絲）: 你找錯人了'}]);
 });

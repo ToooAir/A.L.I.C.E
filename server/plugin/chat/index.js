@@ -62,9 +62,17 @@ function createChat({provider, botId, memory = null, dailyLimit = 300, cooldownS
     const textOf = m => m.content
         || (m.embeds ?? []).map(e => [e.title, e.description].filter(Boolean).join(' ')).filter(Boolean).join(' ');
     const speaker = nameOf;
-    const toEntry = (m, limit) => m.author.id === botId()
-        ? {role: 'assistant', content: compact(textOf(m)).slice(0, limit)}
-        : {role: 'user', content: `[${clock(new Date(m.createdTimestamp))}] ${speaker(m)}: ${compact(m.cleanContent).slice(0, limit)}`};
+    const isAlice = m => m.author.id === botId();
+    // "[HH:MM] name（回覆 X）: text". Alice's own lines are named 愛麗絲 so the model can tell who said what to whom.
+    // `known` maps message ids to messages, to name the person a reply points at.
+    function lineOf(m, limit, known){
+        const name = isAlice(m) ? '愛麗絲' : speaker(m);
+        const target = known.get(m.reference?.messageId)
+            ?? (m.mentions?.repliedUser?.id === botId() ? {author: {id: botId()}} : null);
+        const replyTo = target ? `（回覆 ${isAlice(target) ? '愛麗絲' : speaker(target)}）` : '';
+        const text = compact(isAlice(m) ? textOf(m) : m.cleanContent).slice(0, limit);
+        return `[${clock(new Date(m.createdTimestamp))}] ${name}${replyTo}: ${text}`;
+    }
     // Whether the message says enough about the person to be worth a memory update.
     const memorable = message => compact(message.cleanContent).replace(/@\S+/g, '').replace(/\s/g, '').length >= MIN_MEMORABLE_CHARS;
 
@@ -80,16 +88,22 @@ function createChat({provider, botId, memory = null, dailyLimit = 300, cooldownS
         if(referencedId && !recent.some(m => m.id === referencedId)){
             referenced = await message.fetchReference?.().catch(() => null) ?? null;
         }
-        return {recent, previous: older[0] ?? null, referenced};
+        const known = new Map([...older, referenced].filter(Boolean).map(m => [m.id, m]));
+        return {recent, previous: older[0] ?? null, referenced, known};
     }
 
-    function buildSystem(message, {recent, previous}, notes){
+    // The channel's recent messages go into the system prompt as background; only the message being
+    // answered is sent as the user turn, so the model doesn't answer everyone in the channel at once.
+    function buildSystem(message, {recent, previous, referenced, known}, notes){
         const sent = new Date(message.createdTimestamp);
         let system = `${SYSTEM_PROMPT}\n\n【現在】台灣時間 ${localDay(sent)} ${clock(sent)}`;
-        if(recent.length === 0 && previous){
-            system += `\n聊天室在這之前已經安靜了大約 ${describeGap(message.createdTimestamp - previous.createdTimestamp)}。`;
-        }
         if(notes) system += `\n\n【你對「${speaker(message)}」的印象筆記】\n${notes}`;
+        const background = [...(referenced && textOf(referenced) ? [referenced] : []), ...recent];
+        if(background.length){
+            system += `\n\n【頻道最近對話（背景）】\n${background.map(m => lineOf(m, MAX_CONTEXT_CHARS, known)).join('\n')}`;
+        } else if(previous){
+            system += `\n\n聊天室在這之前已經安靜了大約 ${describeGap(message.createdTimestamp - previous.createdTimestamp)}。`;
+        }
         return system;
     }
 
@@ -169,11 +183,7 @@ function createChat({provider, botId, memory = null, dailyLimit = 300, cooldownS
 
         message.channel.sendTyping?.().catch(() => {});
         const [context, notes] = await Promise.all([gatherContext(message), readNotes(message)]);
-        const messages = [
-            ...(context.referenced && textOf(context.referenced) ? [toEntry(context.referenced, MAX_CONTEXT_CHARS)] : []),
-            ...context.recent.map(m => toEntry(m, MAX_CONTEXT_CHARS)),
-            toEntry(message, MAX_PROMPT_CHARS),
-        ];
+        const messages = [{role: 'user', content: lineOf(message, MAX_PROMPT_CHARS, context.known)}];
 
         let reply, usedTools = false;
         try {
