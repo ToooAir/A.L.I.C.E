@@ -281,3 +281,11 @@ test('/chat memory and /chat forget are private and per person', async () => {
     pool.respond = () => ({affectedRows: 0});
     assert.match((await run('forget')).content, /本來就沒有/);
 });
+
+test('markdown bold is removed from memory notes', async () => {
+    const memory = fakeMemory();
+    const {chat, provider} = setup({memory});
+    provider.notes = '- **興趣**：迷因圖';
+    await chat.handle(mention(`<@${BOT_ID}> 我最近超喜歡看迷因圖`).message);
+    assert.equal(memory.store.get('1/11'), '- 興趣：迷因圖');
+});

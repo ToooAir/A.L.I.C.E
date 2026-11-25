@@ -47,7 +47,7 @@ function transcript(records, chars){
 const TOOL_DEFINITIONS = [
     {
         name: 'channel_activity',
-        description: '頻道最近幾天的統計（不含內容）：總則數、每天則數、最熱鬧時段、發言最多的人。先用這個看概況，再決定讀哪一段。',
+        description: '頻道最近幾天的統計（不含內容）：總則數、每天則數、最熱鬧時段、發言最多的人。先用這個看概況，接著一定要用 summarize_period 或 search_messages 讀熱鬧時段的內容再回答。',
         parameters: {
             type: 'object',
             properties: {days: {type: 'integer', minimum: 1, maximum: MAX_DAYS, description: '往回看幾天'}},

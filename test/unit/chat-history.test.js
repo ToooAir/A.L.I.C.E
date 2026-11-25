@@ -210,6 +210,16 @@ test('Alice looks at the overview first, then reads a slice, then answers', asyn
     assert.equal(replies[0].content, '前天晚上大家在討論期末考呢。');
 });
 
+test('history lookups do not update the asker\'s memory notes', async () => {
+    const {channel} = fakeChannel({days: 3, everyMinutes: 30});
+    const provider = scriptedProvider({steps: [{toolCalls: [{id: 't1', name: 'channel_activity', input: {days: 3}}]}], final: '大家在聊期末考和火鍋。'});
+    const saved = [];
+    const chat = createChat({provider, botId: () => BOT_ID, now: () => NOW, cooldownSeconds: 0, memory: {read: async () => null, save: async (...a) => saved.push(a)}});
+    await chat.handle(mentionIn(channel).message);
+    assert.equal(saved.length, 0);
+    assert.ok(provider.requests.every(r => !r.system.startsWith('你負責')));
+});
+
 test('tool use stops after 3 calls and Alice must answer', async () => {
     const {channel} = fakeChannel({days: 1});
     const ask = id => ({toolCalls: [{id, name: 'channel_activity', input: {days: 1}}]});

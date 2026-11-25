@@ -85,7 +85,8 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
         if(!memory) return;
         try {
             const input = `舊筆記：\n${notes ?? NO_NOTES}\n\n最新對話：\n${speaker(message)}: ${compact(message.cleanContent).slice(0, MAX_PROMPT_CHARS)}\n愛麗絲: ${reply}`;
-            const updated = asText(await provider.generate({system: MEMORY_PROMPT, messages: [{role: 'user', content: input}], maxTokens: MAX_NOTES_TOKENS})).trim();
+            const updated = asText(await provider.generate({system: MEMORY_PROMPT, messages: [{role: 'user', content: input}], maxTokens: MAX_NOTES_TOKENS}))
+                .replace(/\*\*|__/g, '').trim(); // small models add markdown bold despite the prompt
             // "Nothing worth noting" never wipes existing notes; members clear theirs with /chat forget.
             if(!updated || updated === NO_NOTES || updated === notes) return;
             await memory.save(message.guildId, message.author.id, updated.slice(0, MAX_NOTES_CHARS));
@@ -94,9 +95,9 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
         }
     }
 
-    // Get the reply text. Providers that support tools may look up channel history first.
+    // Get {text, usedTools}. Providers that support tools may look up channel history first.
     async function converse(message, system, messages){
-        if(!provider.supportsTools) return asText(await provider.generate({system, messages, maxTokens: MAX_REPLY_TOKENS}));
+        if(!provider.supportsTools) return {text: asText(await provider.generate({system, messages, maxTokens: MAX_REPLY_TOKENS})), usedTools: false};
 
         const tools = createHistoryTools({channel: message.channel, beforeId: message.id, now: message.createdTimestamp, botId: botId(), provider});
         const conversation = [...messages];
@@ -105,7 +106,7 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
             const allowTools = calls < MAX_TOOL_CALLS;
             const result = await provider.generate({system, messages: conversation, maxTokens: MAX_REPLY_TOKENS, ...(allowTools && {tools: tools.definitions})});
             const toolCalls = typeof result === 'object' ? result?.toolCalls ?? [] : [];
-            if(!allowTools || toolCalls.length === 0) return asText(result);
+            if(!allowTools || toolCalls.length === 0) return {text: asText(result), usedTools: calls > 0};
 
             conversation.push({role: 'assistant', content: asText(result), toolCalls});
             for(const call of toolCalls){
@@ -151,14 +152,16 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
             toEntry(message, MAX_PROMPT_CHARS),
         ];
 
-        let reply;
+        let reply, usedTools = false;
         try {
-            reply = (await converse(message, buildSystem(message, context, notes), messages)).trim();
+            ({text: reply, usedTools} = await converse(message, buildSystem(message, context, notes), messages));
+            reply = reply.trim();
         } catch(error) {
             console.error('[chat]', error);
         }
         await send(message, reply || LINES.error);
-        if(reply && memorable(message)) await updateNotes(message, notes, reply);
+        // After a history lookup the reply is about other people, so it would pollute this person's notes.
+        if(reply && !usedTools && memorable(message)) await updateNotes(message, notes, reply);
         return true;
     }
 
