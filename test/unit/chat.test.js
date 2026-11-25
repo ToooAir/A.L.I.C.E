@@ -297,3 +297,16 @@ test('replies that copy the transcript format or are wrapped in quotes are clean
     assert.equal(cleanReply('「……迷因？那是神聖術嗎？」'), '……迷因？那是神聖術嗎？');
     assert.equal(cleanReply('「迷因」是什麼？我想知道「神聖術」'), '「迷因」是什麼？我想知道「神聖術」');
 });
+
+test('name tags like [HSR] are dropped from speaker names', async () => {
+    const {nameOf} = src('plugin/chat/history');
+    const named = name => ({author: {username: 'raw'}, member: {displayName: name}});
+    assert.equal(nameOf(named('伊織真名 [HSR]')), '伊織真名');
+    assert.equal(nameOf(named('【會長】阿華')), '阿華');
+    assert.equal(nameOf(named('[HSR]')), '[HSR]', 'keeps a name that is only a tag');
+    assert.equal(nameOf({author: {username: 'user1'}}), 'user1');
+
+    const {chat, provider} = setup();
+    await chat.handle(mention(`<@${BOT_ID}> 今天過得如何`, {name: '伊織真名 [HSR]'}).message);
+    assert.equal(provider.chatRequests()[0].messages[0].content, '[14:00] 伊織真名: @愛麗絲 今天過得如何');
+});

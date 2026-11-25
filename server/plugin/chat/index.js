@@ -5,7 +5,7 @@
 const path = require('node:path');
 const {SYSTEM_PROMPT, MEMORY_PROMPT, LINES} = require('./persona');
 const {localDay} = require('../activity');
-const {createHistoryTools, compact} = require('./history');
+const {createHistoryTools, compact, nameOf} = require('./history');
 
 const CONTEXT_WINDOW_MINUTES = 30; // earlier messages within this window are sent as context...
 const CONTEXT_MESSAGES = 20;       // ...up to this many
@@ -45,7 +45,7 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
     let usage = {day: null, count: 0};
 
     const isMentioned = message => message.mentions?.users?.has(botId());
-    const speaker = m => m.member?.displayName ?? m.author.username;
+    const speaker = nameOf;
     const toEntry = (m, limit) => m.author.id === botId()
         ? {role: 'assistant', content: compact(m.content).slice(0, limit)}
         : {role: 'user', content: `[${clock(new Date(m.createdTimestamp))}] ${speaker(m)}: ${compact(m.cleanContent).slice(0, limit)}`};

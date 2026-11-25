@@ -28,6 +28,12 @@ const compact = text => String(text ?? '')
     .replace(/\s+/g, ' ')
     .trim();
 
+// Display name without trailing tags like "伊織真名 [HSR]", so the model addresses people naturally.
+function nameOf(m){
+    const name = m.member?.displayName ?? m.author.username;
+    return name.replace(/\s*[\[【(（][^\]】)）]*[\]】)）]\s*/g, ' ').trim() || name;
+}
+
 // Compact transcript: a header per day, "HH:MM name: text", and one person's consecutive messages joined with " / ".
 function transcript(records, chars){
     const lines = [];
@@ -106,7 +112,7 @@ async function loadHistory(channel, {beforeId, now, botId}){
             if(!m.content) continue;
             records.push({
                 at: m.createdTimestamp,
-                author: m.author.id === botId ? '愛麗絲' : (m.member?.displayName ?? m.author.username),
+                author: m.author.id === botId ? '愛麗絲' : nameOf(m),
                 content: compact(m.author.id === botId ? m.content : m.cleanContent).slice(0, MAX_STORED_CHARS),
             });
             if(records.length >= MAX_HISTORY) break;
@@ -214,4 +220,4 @@ function createHistoryTools({channel, beforeId, now, botId, provider}){
     };
 }
 
-module.exports = {TOOL_DEFINITIONS, createHistoryTools, parseTime, compact, transcript, MAX_DAYS, MAX_HISTORY};
+module.exports = {TOOL_DEFINITIONS, createHistoryTools, parseTime, compact, transcript, nameOf, MAX_DAYS, MAX_HISTORY};
