@@ -22,6 +22,6 @@ module.exports = {
     // chat: {
     //     provider: 'mistral', apiKey: '', model: 'mistral-small-2603',
     //     requestsPerSecond: 1, tokensPerMinute: 20000,   // match the limits shown in the Mistral console
-    //     dailyLimit: 100, cooldownSeconds: 20,
+    //     dailyLimit: 300, cooldownSeconds: 20,   // 300/day used up daily ~ $9/month on mistral-small (2026-11 prices); set a spending cap in the Mistral console
     // },
 }

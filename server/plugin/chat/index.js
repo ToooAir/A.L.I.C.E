@@ -40,7 +40,7 @@ function describeGap(ms){
 }
 
 // memory: optional {read(guildId, userId) -> notes|null, save(guildId, userId, notes)}
-function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownSeconds = 20, now = Date.now}){
+function createChat({provider, botId, memory = null, dailyLimit = 300, cooldownSeconds = 20, now = Date.now}){
     const lastUse = new Map(); // userId -> timestamp
     let usage = {day: null, count: 0};
 
