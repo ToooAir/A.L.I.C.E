@@ -30,7 +30,7 @@ test.before(async () => {
     conn = await mysql.createConnection({...server, multipleStatements: true});
     await conn.query(`CREATE DATABASE IF NOT EXISTS \`${database}\` CHARACTER SET utf8mb4`);
     await conn.query(`USE \`${database}\``);
-    await conn.query('DROP TABLE IF EXISTS reply, backup, guild_role, channel_activity');
+    await conn.query('DROP TABLE IF EXISTS reply, backup, guild_role, channel_activity, chat_memory');
 });
 
 test.after(async () => {
@@ -43,7 +43,7 @@ test('schema.sql creates all tables and is safe to re-run', async () => {
     await conn.query(schema);
     await conn.query(schema);
     const [tables] = await conn.query('SHOW TABLES');
-    assert.deepEqual(tables.map(row => Object.values(row)[0]).sort(), ['backup', 'channel_activity', 'guild_role', 'reply']);
+    assert.deepEqual(tables.map(row => Object.values(row)[0]).sort(), ['backup', 'channel_activity', 'chat_memory', 'guild_role', 'reply']);
 });
 
 test('reply CRUD with emoji, CJK and case-insensitive lookup', async () => {
@@ -110,4 +110,16 @@ test('channel activity counting and /rank over real data', async () => {
         deferReply: async () => {}, editReply: async p => out.push(p.content), followUp: async p => out.push(p.content),
     });
     assert.deepEqual(out[0].split('\n').slice(1), [`第1名 <#${C}> : 999`, `第2名 <#${B}> : 20`, `第3名 <#${A}> : 8`]);
+});
+
+test('chat memory is stored per guild and person', async () => {
+    assert.equal(await db.readChatMemory(G, '11'), null);
+    await db.saveChatMemory(G, '11', '- 喜歡冬天 ❄️');
+    await db.saveChatMemory(G, '12', '- 喜歡貓');
+    await db.saveChatMemory(G, '11', '- 喜歡冬天 ❄️\n- 明天考試');
+    assert.equal(await db.readChatMemory(G, '11'), '- 喜歡冬天 ❄️\n- 明天考試');
+    assert.equal(await db.readChatMemory('other-guild', '11'), null);
+    assert.equal(await db.deleteChatMemory(G, '11'), 1);
+    assert.equal(await db.deleteChatMemory(G, '11'), 0);
+    assert.equal(await db.readChatMemory(G, '12'), '- 喜歡貓');
 });

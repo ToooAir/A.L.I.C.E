@@ -99,6 +99,21 @@ async function readActivityStartDay(guildId){
     return results[0].firstDay;
 }
 
+// Alice's notes about a member for chat replies (null when she has none).
+async function readChatMemory(guildId, userId){
+    const results = await query('SELECT notes FROM chat_memory WHERE guildId = ? AND userId = ? LIMIT 1', [guildId, userId]);
+    return results[0]?.notes ?? null;
+}
+
+async function saveChatMemory(guildId, userId, notes){
+    await query('INSERT INTO chat_memory (guildId, userId, notes) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE notes = VALUES(notes)', [guildId, userId, notes]);
+}
+
+async function deleteChatMemory(guildId, userId){
+    const results = await query('DELETE FROM chat_memory WHERE guildId = ? AND userId = ?', [guildId, userId]);
+    return results.affectedRows;
+}
+
 module.exports = {
     createReply: createReply,
     readReply: readReply,
@@ -117,4 +132,7 @@ module.exports = {
     incrementChannelActivity: incrementChannelActivity,
     readChannelActivity: readChannelActivity,
     readActivityStartDay: readActivityStartDay,
+    readChatMemory: readChatMemory,
+    saveChatMemory: saveChatMemory,
+    deleteChatMemory: deleteChatMemory,
 }
