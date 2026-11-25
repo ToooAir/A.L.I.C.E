@@ -19,5 +19,9 @@ module.exports = {
     // rankCategoryIds: ['1004665762453143612', '811570519216226304'],
     // Optional: chat replies when Alice is mentioned. Off unless `provider` names a file in
     // server/plugin/chat/providers (see the README there). apiKey/model are passed to the provider.
-    // chat: { provider: '', apiKey: '', model: '', dailyLimit: 100, cooldownSeconds: 20 },
+    // chat: {
+    //     provider: 'mistral', apiKey: '', model: 'mistral-small-2603',
+    //     requestsPerSecond: 1, tokensPerMinute: 20000,   // match the limits shown in the Mistral console
+    //     dailyLimit: 100, cooldownSeconds: 20,
+    // },
 }

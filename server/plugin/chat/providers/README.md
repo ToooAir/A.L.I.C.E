@@ -1,7 +1,11 @@
 # Chat providers
 
 Each file here connects `/plugin/chat` to one LLM service. Pick one with `chat.provider` in `config.js`
-(the file name without `.js`). No provider is included yet, so chat replies stay off.
+(the file name without `.js`).
+
+| Provider | Config |
+|---|---|
+| `mistral` | `apiKey`, `model` (e.g. `mistral-small-2603`), optional `temperature` (0.7), `requestsPerSecond` (1), `tokensPerMinute` (20000), `baseUrl`. Requests are queued to stay within the limits and 429/5xx are retried. Set env `CHAT_DEBUG=1` to log token usage per request. |
 
 A provider exports `createProvider(chatConfig)` and returns an object with one method:
 

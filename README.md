@@ -133,7 +133,7 @@ cp server/config-sample.js server/config.js     # 再填入下列設定
 | `token` | Bot token（**不要 commit**，已列在 `.gitignore`） |
 | `mysqlConnect` | MySQL 連線資訊 |
 | `rankCategoryIds` | （選填）`/rank` 預設排序的分類 ID |
-| `chat` | （選填）聊天功能：`provider`、`apiKey`、`model`、`dailyLimit`（每日總則數，預設 100）、`cooldownSeconds`（每人冷卻秒數，預設 20） |
+| `chat` | （選填）聊天功能：`provider`（目前有 `mistral`）、`apiKey`、`model`、`requestsPerSecond`／`tokensPerMinute`（照 API 帳號的限制填）、`dailyLimit`（每日總則數，預設 100）、`cooldownSeconds`（每人冷卻秒數，預設 20） |
 
 ### 3. 啟動
 
