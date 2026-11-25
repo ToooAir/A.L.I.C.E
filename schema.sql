@@ -38,3 +38,13 @@ CREATE TABLE IF NOT EXISTS `channel_activity` (
   `count` int unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`guildId`,`channelId`,`day`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Alice's short notes about each member, used by chat replies. Members can view or clear theirs with /chat.
+-- Added 2026-11-25.
+CREATE TABLE IF NOT EXISTS `chat_memory` (
+  `guildId` varchar(27) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `userId` varchar(27) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `notes` varchar(1000) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`guildId`,`userId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

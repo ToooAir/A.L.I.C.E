@@ -3,9 +3,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {Client, GatewayIntentBits, EmbedBuilder, ActivityType, Partials, Collection, Events, ChannelType, MessageFlags} = require('discord.js');
 const {talk, replyInDM} = require('./plugin/talk');
-const {readBackupChannel} = require('./plugin/mysql');
+const {readBackupChannel, readChatMemory, saveChatMemory} = require('./plugin/mysql');
 const {isUnauthorizedEveryone} = require('./plugin/permission');
 const {recordMessage} = require('./plugin/activity');
+const {createChat, loadProvider} = require('./plugin/chat');
 const config = require('./config');
 
 const client = new Client({
@@ -36,6 +37,15 @@ client.once(Events.ClientReady, () => {
 });
 
 client.commands = new Collection();
+
+// LLM replies when Alice is mentioned; inactive until config.chat.provider is set.
+const chat = createChat({
+    provider: loadProvider(config.chat),
+    botId: () => client.user.id,
+    memory: {read: readChatMemory, save: saveChatMemory},
+    dailyLimit: config.chat?.dailyLimit,
+    cooldownSeconds: config.chat?.cooldownSeconds,
+});
 
 const commandsPath = path.join(__dirname, 'command');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -76,7 +86,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 // 訊息觸發
-client.on(Events.MessageCreate, message => {
+client.on(Events.MessageCreate, async message => {
 
     if(message.author.bot) return;
 
@@ -92,6 +102,11 @@ client.on(Events.MessageCreate, message => {
 
     recordMessage(message);
 
+    try {
+        if(await chat.handle(message)) return;
+    } catch (error) {
+        console.error('[chat]', error);
+    }
     talk(message);
 });
 

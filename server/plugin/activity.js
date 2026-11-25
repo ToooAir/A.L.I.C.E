@@ -1,5 +1,4 @@
 'use strict';
-const {incrementChannelActivity} = require('./mysql');
 
 // Calendar date in the process timezone (TZ=Asia/Taipei under Docker) as YYYY-MM-DD,
 // so day boundaries don't depend on the MySQL server's timezone.
@@ -16,7 +15,8 @@ function recordMessage(message){
     if(!message.guildId) return;
     const channelId = message.channel.isThread() ? message.channel.parentId : message.channelId;
     if(!channelId) return;
-    incrementChannelActivity(message.guildId, channelId, localDay(message.createdAt))
+    // Required here so modules that only need localDay() don't load the database config.
+    require('./mysql').incrementChannelActivity(message.guildId, channelId, localDay(message.createdAt))
         .catch(error => console.error('[activity]', error));
 }
 
