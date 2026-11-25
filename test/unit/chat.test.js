@@ -76,7 +76,7 @@ test('sends the recent conversation with times and speakers', async () => {
     const history = [
         channelMessage('12', '三天前的話題', 3 * 1440), // outside the 30-minute window
         channelMessage('12', '今天好冷', 12, '阿華'),
-        channelMessage(BOT_ID, '請注意保暖。', 11),
+        {...channelMessage(BOT_ID, '請注意保暖。', 11), reference: {messageId: '1'}},
         channelMessage('13', '', 5), // attachment only
         channelMessage('14', '想喝熱可可', 2, '小美'),
     ];
@@ -335,7 +335,7 @@ test('Alice can read her own embeds in the context, with mentions made readable'
     const {chat, provider} = setup();
     const log = {...channelMessage(BOT_ID, '', 3), embeds: [{title: '排行榜', description: '<@!12> 在 <#34> 發言 50 則'}]};
     await chat.handle(mention(`<@${BOT_ID}> 這是什麼意思`, {history: [log]}).message);
-    assert.match(provider.chatRequests()[0].system, /\[13:57\] 愛麗絲: 排行榜 @某人 在 #頻道 發言 50 則$/);
+    assert.match(provider.chatRequests()[0].system, /\[13:57\] 自動回覆: 排行榜 @某人 在 #頻道 發言 50 則$/);
 });
 
 test('Alice sees who replied to whom and answers only the current message', async () => {
@@ -349,4 +349,12 @@ test('Alice sees who replied to whom and answers only the current message', asyn
     const [request] = provider.chatRequests();
     assert.match(request.system, /\[13:59\] 愛麗絲（回覆 DeepSnow）: 真名，請你好好冷靜一下$/);
     assert.deepEqual(request.messages, [{role: 'user', content: '[14:00] 伊織真名（回覆 愛麗絲）: 你找錯人了'}]);
+});
+
+test('keyword replies and embeds from Alice are labelled as automatic, not her words', async () => {
+    const {chat, provider} = setup();
+    const ask = channelMessage('13', '晚餐選擇1', 2, '伊織真名');
+    const pick = channelMessage(BOT_ID, '中式', 2); // sent with channel.send, no reference
+    await chat.handle(mention(`<@${BOT_ID}> 晚餐吃什麼好`, {history: [ask, pick]}).message);
+    assert.match(provider.chatRequests()[0].system, /\[13:58\] 伊織真名: 晚餐選擇1\n\[13:58\] 自動回覆: 中式$/);
 });

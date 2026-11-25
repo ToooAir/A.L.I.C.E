@@ -63,16 +63,18 @@ function createChat({provider, botId, memory = null, dailyLimit = 300, cooldownS
         || (m.embeds ?? []).map(e => [e.title, e.description].filter(Boolean).join(' ')).filter(Boolean).join(' ');
     const speaker = nameOf;
     const isAlice = m => m.author.id === botId();
-    // "[HH:MM] name（回覆 X）: text". Alice's own lines are named 愛麗絲 so the model can tell who said what to whom.
+    // "[HH:MM] name（回覆 X）: text". Alice's chat replies always reply to a message, so her messages without a
+    // reference are keyword replies, greetings or embeds: labelled 自動回覆 so the model doesn't take them as its own words.
     // `known` maps message ids to messages, to name the person a reply points at.
     function lineOf(m, limit, known){
-        const name = isAlice(m) ? '愛麗絲' : speaker(m);
+        const name = !isAlice(m) ? speaker(m) : m.reference ? '愛麗絲' : '自動回覆';
         const target = known.get(m.reference?.messageId)
             ?? (m.mentions?.repliedUser?.id === botId() ? {author: {id: botId()}} : null);
         const replyTo = target ? `（回覆 ${isAlice(target) ? '愛麗絲' : speaker(target)}）` : '';
         const text = compact(isAlice(m) ? textOf(m) : m.cleanContent).slice(0, limit);
         return `[${clock(new Date(m.createdTimestamp))}] ${name}${replyTo}: ${text}`;
     }
+
     // Whether the message says enough about the person to be worth a memory update.
     const memorable = message => compact(message.cleanContent).replace(/@\S+/g, '').replace(/\s/g, '').length >= MIN_MEMORABLE_CHARS;
 
