@@ -319,7 +319,10 @@ test('replies to Alice and mentions of her bot role also count as talking to her
         return Object.assign(message, extra);
     };
 
-    assert.equal(await chat.handle(withMentions({repliedUser: {id: BOT_ID}})), true, 'reply with the ping turned off');
+    const replyTo = reference => withMentions({repliedUser: {id: BOT_ID}}, {fetchReference: async () => reference});
+    assert.equal(await chat.handle(replyTo({content: '請好好休息。'})), true, 'reply to her text, ping turned off');
+    assert.equal(await chat.handle(replyTo({content: '', embeds: [{description: '🗑 <@!12>的訊息被刪除了'}]})), false, 'reply to her embed');
+    assert.equal(await chat.handle(replyTo(null)), false, 'replied message unavailable');
     const roles = new djs.Collection([['role-alice', {}]]);
     const guild = {members: {me: {roles: {botRole: {id: 'role-alice'}}}}};
     assert.equal(await chat.handle(withMentions({roles}, {guild})), true, 'bot role mention');
@@ -327,4 +330,11 @@ test('replies to Alice and mentions of her bot role also count as talking to her
     assert.equal(await chat.handle(withMentions({repliedUser: {id: '12'}})), false, 'reply to someone else');
     assert.equal(await chat.handle(withMentions({roles: new djs.Collection([['other', {}]])}, {guild})), false, 'other role');
     assert.equal(provider.chatRequests().length, 2);
+});
+
+test('Alice can read her own embeds in the context, with mentions made readable', async () => {
+    const {chat, provider} = setup();
+    const log = {...channelMessage(BOT_ID, '', 3), embeds: [{title: '排行榜', description: '<@!12> 在 <#34> 發言 50 則'}]};
+    await chat.handle(mention(`<@${BOT_ID}> 這是什麼意思`, {history: [log]}).message);
+    assert.deepEqual(provider.chatRequests()[0].messages[0], {role: 'assistant', content: '排行榜 @某人 在 #頻道 發言 50 則'});
 });

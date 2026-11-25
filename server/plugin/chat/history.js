@@ -25,6 +25,8 @@ const fullStamp = ms => { const d = new Date(ms); return `${localDay(d)} ${pad(d
 const compact = text => String(text ?? '')
     .replace(/https?:\/\/\S+/g, '[連結]')
     .replace(/<a?(:\w+:)\d+>/g, '$1')
+    .replace(/<@[!&]?\d+>/g, '@某人')
+    .replace(/<#\d+>/g, '#頻道')
     .replace(/\s+/g, ' ')
     .trim();
 

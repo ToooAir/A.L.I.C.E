@@ -44,18 +44,26 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
     const lastUse = new Map(); // userId -> timestamp
     let usage = {day: null, count: 0};
 
-    // Alice is addressed by a mention, by a reply to one of her messages (even with the ping turned off),
-    // or by mentioning her managed bot role, which Discord's autocomplete sometimes picks instead of the user.
-    function isMentioned(message){
+    // Alice is addressed by a mention, by mentioning her managed bot role (Discord's autocomplete sometimes
+    // picks it instead of the user), or by a reply to one of her text messages even with the ping turned off.
+    // Replies to her embeds (deletion logs, /rank, search results) don't count: those aren't conversation.
+    async function isAddressed(message){
         const id = botId();
         const mentions = message.mentions;
-        if(mentions?.users?.has(id) || mentions?.repliedUser?.id === id) return true;
+        if(mentions?.users?.has(id)) return true;
         const botRole = message.guild?.members?.me?.roles?.botRole;
-        return Boolean(botRole && mentions?.roles?.has(botRole.id));
+        if(botRole && mentions?.roles?.has(botRole.id)) return true;
+        if(mentions?.repliedUser?.id !== id) return false;
+        const referenced = await message.fetchReference?.().catch(() => null);
+        return Boolean(referenced?.content);
     }
+
+    // Text of a message; for embed-only messages (Alice's logs and command results) the embed's title and description.
+    const textOf = m => m.content
+        || (m.embeds ?? []).map(e => [e.title, e.description].filter(Boolean).join(' ')).filter(Boolean).join(' ');
     const speaker = nameOf;
     const toEntry = (m, limit) => m.author.id === botId()
-        ? {role: 'assistant', content: compact(m.content).slice(0, limit)}
+        ? {role: 'assistant', content: compact(textOf(m)).slice(0, limit)}
         : {role: 'user', content: `[${clock(new Date(m.createdTimestamp))}] ${speaker(m)}: ${compact(m.cleanContent).slice(0, limit)}`};
     // Whether the message says enough about the person to be worth a memory update.
     const memorable = message => compact(message.cleanContent).replace(/@\S+/g, '').replace(/\s/g, '').length >= MIN_MEMORABLE_CHARS;
@@ -65,7 +73,7 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
         const fetched = await message.channel.messages.fetch({limit: CONTEXT_MESSAGES, before: message.id}).catch(() => null);
         const older = fetched ? [...fetched.values()].sort((a, b) => b.createdTimestamp - a.createdTimestamp) : [];
         const cutoff = message.createdTimestamp - CONTEXT_WINDOW_MINUTES * 60000;
-        const recent = older.filter(m => m.createdTimestamp >= cutoff && m.content).reverse();
+        const recent = older.filter(m => m.createdTimestamp >= cutoff && textOf(m)).reverse();
 
         let referenced = null;
         const referencedId = message.reference?.messageId;
@@ -142,7 +150,7 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
 
     // Returns true when the message was handled as a chat (the caller should skip other replies).
     async function handle(message){
-        if(!provider || !isMentioned(message)) return false;
+        if(!provider || !(await isAddressed(message))) return false;
 
         const last = lastUse.get(message.author.id) ?? 0;
         if(now() - last < cooldownSeconds * 1000){
@@ -162,7 +170,7 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
         message.channel.sendTyping?.().catch(() => {});
         const [context, notes] = await Promise.all([gatherContext(message), readNotes(message)]);
         const messages = [
-            ...(context.referenced?.content ? [toEntry(context.referenced, MAX_CONTEXT_CHARS)] : []),
+            ...(context.referenced && textOf(context.referenced) ? [toEntry(context.referenced, MAX_CONTEXT_CHARS)] : []),
             ...context.recent.map(m => toEntry(m, MAX_CONTEXT_CHARS)),
             toEntry(message, MAX_PROMPT_CHARS),
         ];
