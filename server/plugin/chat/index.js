@@ -19,6 +19,13 @@ const MAX_NOTES_CHARS = 1000;      // chat_memory.notes column size
 const NO_NOTES = '（無）';
 const DISCORD_MESSAGE_LIMIT = 2000;
 
+// Models sometimes copy the transcript format ("[09:22] 愛麗絲: ...") or wrap the whole reply in quotes.
+function cleanReply(text){
+    let reply = text.trim().replace(/^(\[\d{1,2}:\d{2}\]\s*)?(愛麗絲|Alice)\s*[:：]\s*/i, '').trim();
+    if(/^「[^「」]*」$/.test(reply)) reply = reply.slice(1, -1).trim();
+    return reply;
+}
+
 // Providers return a string, or {text, toolCalls} when they support tools.
 const asText = result => typeof result === 'string' ? result : (result?.text ?? '');
 
@@ -155,7 +162,7 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
         let reply, usedTools = false;
         try {
             ({text: reply, usedTools} = await converse(message, buildSystem(message, context, notes), messages));
-            reply = reply.trim();
+            reply = cleanReply(reply);
         } catch(error) {
             console.error('[chat]', error);
         }
@@ -180,4 +187,4 @@ function loadProvider(chatConfig){
     return createProvider(chatConfig);
 }
 
-module.exports = {createChat, loadProvider};
+module.exports = {createChat, loadProvider, cleanReply};

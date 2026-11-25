@@ -289,3 +289,11 @@ test('markdown bold is removed from memory notes', async () => {
     await chat.handle(mention(`<@${BOT_ID}> 我最近超喜歡看迷因圖`).message);
     assert.equal(memory.store.get('1/11'), '- 興趣：迷因圖');
 });
+
+test('replies that copy the transcript format or are wrapped in quotes are cleaned', () => {
+    const {cleanReply} = src('plugin/chat');
+    assert.equal(cleanReply('[09:22] 愛麗絲: 當然記得。'), '當然記得。');
+    assert.equal(cleanReply('愛麗絲：你好'), '你好');
+    assert.equal(cleanReply('「……迷因？那是神聖術嗎？」'), '……迷因？那是神聖術嗎？');
+    assert.equal(cleanReply('「迷因」是什麼？我想知道「神聖術」'), '「迷因」是什麼？我想知道「神聖術」');
+});
