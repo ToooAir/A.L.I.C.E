@@ -54,7 +54,7 @@ function createProvider(chatConfig, {fetchImpl = fetch, now = Date.now, wait = s
     if(!chatConfig.apiKey) throw new Error('chat.apiKey is required for the mistral provider');
     if(!chatConfig.model) throw new Error('chat.model is required for the mistral provider');
     const url = `${chatConfig.baseUrl ?? DEFAULT_URL}/v1/chat/completions`;
-    const minInterval = 1000 / (chatConfig.requestsPerSecond ?? 1);
+    let minInterval = 1000 / (chatConfig.requestsPerSecond ?? 1);
     const tokensPerMinute = chatConfig.tokensPerMinute ?? 20000;
 
     let queue = Promise.resolve();
@@ -89,13 +89,20 @@ function createProvider(chatConfig, {fetchImpl = fetch, now = Date.now, wait = s
                 body: JSON.stringify(body),
                 signal: AbortSignal.timeout(TIMEOUT_MS),
             });
+            // Follow the per-minute request limit the API reports, if it is stricter than the config.
+            const perMinute = Number(response.headers.get('x-ratelimit-limit-req-minute'));
+            if(perMinute > 0) minInterval = Math.max(minInterval, MINUTE / perMinute);
             if(response.ok){
                 const data = await response.json();
                 if(data.usage?.total_tokens) entry.tokens = data.usage.total_tokens;
                 return data;
             }
-            const retryable = response.status === 429 || response.status >= 500;
             const detail = (await response.text().catch(() => '')).slice(0, 300);
+            // A limit of 0 means the account has no API access to this model (Free mode); retrying won't help.
+            if(response.status === 429 && response.headers.get('x-ratelimit-limit-req-minute') === '0'){
+                throw new Error(`Mistral API 429: no API access to ${chatConfig.model} on this account (limit 0, Free mode?). Enable pay-as-you-go or use another model. ${detail}`);
+            }
+            const retryable = response.status === 429 || response.status >= 500;
             if(!retryable || attempt >= MAX_RETRIES) throw new Error(`Mistral API ${response.status}: ${detail}`);
             const retryAfter = Number(response.headers.get('retry-after'));
             await wait(retryAfter > 0 ? retryAfter * 1000 : 2000 * 2 ** attempt);

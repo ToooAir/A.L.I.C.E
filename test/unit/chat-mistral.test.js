@@ -133,3 +133,16 @@ test('token estimate counts Chinese characters as about one token each', () => {
     assert.equal(estimateTokens('愛麗絲你好'), 5);
     assert.equal(estimateTokens('hello world!'), 3);
 });
+
+test('a limit of 0 (no API access) fails at once with a clear message', async () => {
+    const {provider, calls} = setup({responses: [jsonResponse(429, {code: '1300'}, {'x-ratelimit-limit-req-minute': '0'})]});
+    await assert.rejects(ask(provider), /no API access to mistral-small-2603/);
+    assert.equal(calls.length, 1);
+});
+
+test('slows down to the per-minute request limit reported by the API', async () => {
+    const limited = () => ({...reply({content: '好'}), headers: {get: name => name === 'x-ratelimit-limit-req-minute' ? '2' : null}});
+    const {provider, calls} = setup({responses: [limited, limited, limited]});
+    await ask(provider); await ask(provider); await ask(provider);
+    assert.deepEqual(calls.map(c => c.at), [0, 30000, 60000]);
+});
