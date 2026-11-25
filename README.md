@@ -82,6 +82,7 @@
 - **@everyone 防護**：沒有「提及 @everyone」權限的人發出含 `@everyone` 的訊息會被自動刪除
 - **私下關心**：試著對愛麗絲說「我討厭你」🥺
 - **打招呼**：訊息裡有「嗨愛麗絲」就會回應
+- **聊天**（選用，預設關閉）：標記愛麗絲時，她會以《刀劍神域》愛麗絲的個性回話。需要在 `config.js` 設定 `chat`，並在 `server/plugin/chat/providers/` 放一個對應 LLM 服務的 provider（見該資料夾的 README）。個性設定在 `server/plugin/chat/persona.js`。她會參考同頻道最近 30 分鐘的對話，並記下對每個人的簡短印象（只存在資料庫的 `chat_memory`），成員可以用 `/chat memory` 查看、`/chat forget` 清除
 - `/about` 顯示自我介紹與延遲
 
 ## 指令一覽
@@ -93,6 +94,7 @@
 | `/reply add·delete·search·help` | 關鍵字回覆 | 所有人 |
 | `/guild` | 伺服器統計 | 所有人 |
 | `/about` | 自我介紹 | 所有人 |
+| `/chat memory·forget` | 查看或清除愛麗絲記得關於自己的事（只有自己看得到） | 所有人 |
 | `/guild-role add·delete` | 設定統計的身分組 | 管理伺服器 |
 | `/backup add·delete` | 刪除訊息備份 | 管理伺服器 |
 | `/broadcast` | 以 bot 身分發言 | 管理伺服器 |
@@ -131,6 +133,7 @@ cp server/config-sample.js server/config.js     # 再填入下列設定
 | `token` | Bot token（**不要 commit**，已列在 `.gitignore`） |
 | `mysqlConnect` | MySQL 連線資訊 |
 | `rankCategoryIds` | （選填）`/rank` 預設排序的分類 ID |
+| `chat` | （選填）聊天功能：`provider`、`apiKey`、`model`、`dailyLimit`（每日總則數，預設 100）、`cooldownSeconds`（每人冷卻秒數，預設 20） |
 
 ### 3. 啟動
 
@@ -172,6 +175,7 @@ server/
     ├── mysql.js            資料庫存取
     ├── talk.js             關鍵字回覆與聊天反應
     ├── activity.js         各頻道每日訊息數統計（/rank）
+    ├── chat/               標記愛麗絲時的 LLM 聊天（persona.js 個性、providers/ 各家服務）
     ├── permission.js       身分組位階與 @everyone 權限檢查
     └── embed/              Embed 訊息樣式
 ```
