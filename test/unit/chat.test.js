@@ -125,7 +125,7 @@ test('remembers people across chats', async (t) => {
     });
 
     await t.test('next chat: notes are in the system prompt', async () => {
-        await chat.handle(mention(`<@${BOT_ID}> 又是我`).message);
+        await chat.handle(mention(`<@${BOT_ID}> 又是我，今天考完試了`).message);
         assert.match(provider.chatRequests()[1].system, /【你對「小明」的印象筆記】\n- 喜歡冬天/);
         assert.match(provider.memoryRequests()[1].messages[0].content, /舊筆記：\n- 喜歡冬天/);
     });
@@ -146,14 +146,27 @@ test('memory updates never wipe or overflow notes', async (t) => {
 
     for (const notes of ['（無）', '', '- 喜歡貓', new Error('API down')]) {
         provider.notes = notes;
-        await chat.handle(mention(`<@${BOT_ID}> 嗨`).message);
+        await chat.handle(mention(`<@${BOT_ID}> 我今天去看了電影`).message);
     }
     assert.equal(saves, 0, 'nothing / unchanged / failed updates are not saved');
     assert.equal(memory.store.get('1/11'), '- 喜歡貓');
 
     provider.notes = '- ' + '長'.repeat(2000);
-    await chat.handle(mention(`<@${BOT_ID}> 嗨`).message);
+    await chat.handle(mention(`<@${BOT_ID}> 我今天去看了電影`).message);
     assert.equal(memory.store.get('1/11').length, 1000);
+});
+
+test('short greetings do not spend a memory update', async () => {
+    const {chat, provider} = setup({memory: fakeMemory()});
+    for (const text of ['嗨', '早安', '在嗎？  ']) await chat.handle(mention(`<@${BOT_ID}> ${text}`).message);
+    assert.equal(provider.chatRequests().length, 3);
+    assert.equal(provider.memoryRequests().length, 0);
+});
+
+test('links and custom emoji are shortened before reaching the model', async () => {
+    const {chat, provider} = setup();
+    await chat.handle(mention(`<@${BOT_ID}> 看這個 https://example.com/very/long/path?x=1   <:pepe:123456789012345678>`).message);
+    assert.equal(provider.chatRequests()[0].messages[0].content, '[14:00] 小明: @愛麗絲 看這個 [連結] :pepe:');
 });
 
 test('chat still works when memory is unavailable', async (t) => {
@@ -178,8 +191,8 @@ test('long input and output are cut to size', async () => {
     const {message, replies} = mention('字'.repeat(5000), {history: [channelMessage('12', '長'.repeat(5000), 1)]});
     await chat.handle(message);
     const [earlier, current] = provider.chatRequests()[0].messages;
-    assert.ok(earlier.content.length <= 500 + '[13:59] user12: '.length);
-    assert.ok(current.content.length <= 1000 + '[14:00] 小明: '.length);
+    assert.ok(earlier.content.length <= 300 + '[13:59] user12: '.length);
+    assert.ok(current.content.length <= 600 + '[14:00] 小明: '.length);
     assert.equal(replies[0].content.length, 2000);
 });
 

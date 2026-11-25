@@ -85,12 +85,12 @@ test('search_messages filters, reports totals and samples evenly', async () => {
     let text = await t.run('search_messages', {since: '2026-11-24', keyword: '考試'});
     const lines = text.split('\n');
     assert.match(lines[0], /^符合 \d+ 則：$/);
-    assert.ok(lines.slice(1).every(l => /^\[\d\d\/\d\d \d\d:\d\d\] .+: 下週要考試/.test(l)));
+    assert.ok(lines.slice(1).every(l => /^【\d\d\/\d\d】$/.test(l) || /^\d\d:\d\d .+: 下週要考試/.test(l)), text);
 
     text = await t.run('search_messages', {since: '2026-11-24 00:00', until: '2026-11-24 23:59', author: '小美', limit: 5});
-    assert.match(text, /^符合 48 則，平均抽樣顯示 5 則：/);
-    assert.equal(text.split('\n').length, 6);
-    assert.ok(text.split('\n').slice(1).every(l => l.includes('] 小美: ')));
+    assert.match(text, /^符合 48 則，平均抽樣顯示 5 則：\n【11\/24】\n/);
+    assert.equal(text.split('\n').length, 7);
+    assert.ok(text.split('\n').slice(2).every(l => / 小美: /.test(l)));
 
     assert.match(await t.run('search_messages', {since: '昨天'}), /時間格式錯誤/);
     assert.match(await t.run('search_messages', {since: '2026-11-24', keyword: '不存在的字'}), /沒有符合的訊息（只能查到最近 7 天/);
@@ -99,7 +99,7 @@ test('search_messages filters, reports totals and samples evenly', async () => {
 test('search_messages truncates each message', async () => {
     const {channel} = fakeChannel({days: 1, everyMinutes: 60, make: () => ({content: '長'.repeat(1000)})});
     const text = await tools(channel).run('search_messages', {since: '2026-11-25', limit: 1});
-    assert.ok(text.split('\n')[1].length < 230);
+    assert.ok(text.split('\n')[2].length < 120);
 });
 
 test('summarize_period summarizes in chunks and caps the number of calls', async () => {
@@ -108,15 +108,36 @@ test('summarize_period summarizes in chunks and caps the number of calls', async
     let text = await tools(small.channel, summarizer).run('summarize_period', {since: '2026-11-25'});
     assert.equal(summarizer.requests.length, 1);
     assert.equal(summarizer.requests[0].system, SUMMARY_PROMPT);
-    assert.match(summarizer.requests[0].messages[0].content, /^\[11\/25 00:00\] /);
+    assert.match(summarizer.requests[0].messages[0].content, /^【11\/25】\n00:00 小美: 訊息10\n01:00 小明: /);
+    assert.equal(summarizer.requests[0].maxTokens, 250);
     assert.match(text, /^共 14 則訊息的摘要：\n11\/25 00:00 起：摘要1$/);
 
     const big = fakeChannel({days: 7, everyMinutes: 10, make: () => ({content: '字'.repeat(300)})});
     const busy = fakeSummarizer();
     text = await tools(big.channel, busy).run('summarize_period', {since: '2026-11-18'});
-    assert.equal(busy.requests.length, 6);
-    assert.ok(busy.requests.every(r => r.messages[0].content.length <= 8500));
-    assert.match(text, /^共 1000 則訊息，太多了，只摘要其中 6\/\d+ 段：/);
+    assert.equal(busy.requests.length, 3);
+    assert.ok(busy.requests.every(r => r.messages[0].content.length <= 3300));
+    assert.match(text, /^共 1000 則訊息，太多了，只摘要其中 3\/\d+ 段：/);
+});
+
+test('summaries are requested one at a time', async () => {
+    const {channel} = fakeChannel({days: 2, everyMinutes: 10, make: () => ({content: '字'.repeat(150)})});
+    let active = 0, peak = 0;
+    const provider = {async generate() { peak = Math.max(peak, ++active); await new Promise(r => setTimeout(r, 5)); active--; return '摘要'; }};
+    await tools(channel, provider).run('summarize_period', {since: '2026-11-23'});
+    assert.equal(peak, 1);
+});
+
+test('transcript merges one person\'s consecutive messages and adds day headers', () => {
+    const {transcript} = src('plugin/chat/history');
+    const at = iso => Date.parse(iso);
+    assert.deepEqual(transcript([
+        {at: at('2026-11-24T13:00:00Z'), author: '阿華', content: '晚安'},
+        {at: at('2026-11-24T15:58:00Z'), author: '阿華', content: '睡不著'},
+        {at: at('2026-11-24T16:01:00Z'), author: '阿華', content: '有人嗎'},
+        {at: at('2026-11-24T16:02:00Z'), author: '阿華', content: '…'},
+        {at: at('2026-11-24T16:03:00Z'), author: '小美', content: '我在'},
+    ], 100), ['【11/24】', '21:00 阿華: 晚安', '23:58 阿華: 睡不著', '【11/25】', '00:01 阿華: 有人嗎 / …', '00:03 小美: 我在']);
 });
 
 test('unknown tools get an error message', async () => {
@@ -189,7 +210,7 @@ test('Alice looks at the overview first, then reads a slice, then answers', asyn
     assert.equal(replies[0].content, '前天晚上大家在討論期末考呢。');
 });
 
-test('tool use stops after 4 calls and Alice must answer', async () => {
+test('tool use stops after 3 calls and Alice must answer', async () => {
     const {channel} = fakeChannel({days: 1});
     const ask = id => ({toolCalls: [{id, name: 'channel_activity', input: {days: 1}}]});
     const provider = scriptedProvider({
@@ -204,6 +225,8 @@ test('tool use stops after 4 calls and Alice must answer', async () => {
     assert.equal(chatRequests[2].tools, undefined, 'final request offers no tools');
     const results = chatRequests[2].messages.filter(m => m.role === 'tool');
     assert.equal(results.length, 5);
+    assert.match(results[2].content, /總共/);
+    assert.match(results[3].content, /已達本次查詢上限/);
     assert.match(results[4].content, /已達本次查詢上限/);
     assert.equal(replies[0].content, '我查到的就這些。');
 });

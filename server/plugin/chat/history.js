@@ -7,23 +7,47 @@ const {SUMMARY_PROMPT} = require('./persona');
 
 const MAX_DAYS = 7;
 const MAX_HISTORY = 1000;          // messages loaded from Discord per chat
-const MAX_STORED_CHARS = 500;      // per message kept in memory
-const SEARCH_CHARS = 200;          // per message returned by search_messages
-const MAX_SEARCH_RESULTS = 50;
-const SUMMARY_CHUNK_CHARS = 8000;  // text per summarization call
-const MAX_SUMMARY_CHUNKS = 6;
+const MAX_STORED_CHARS = 200;      // per message kept in memory
+const SEARCH_CHARS = 100;          // per message returned by search_messages
+const MAX_SEARCH_RESULTS = 30;
+const DEFAULT_SEARCH_RESULTS = 20;
+const SUMMARY_CHUNK_CHARS = 3000;  // text per summarization call
+const MAX_SUMMARY_CHUNKS = 3;      // calls per summary, sent one after another
+const SUMMARY_TOKENS = 250;
+const MERGE_GAP = 5 * 60000;       // consecutive messages by one person within this gap share a line
 const HOUR = 3600000;
 
 const pad = n => String(n).padStart(2, '0');
 const stamp = ms => { const d = new Date(ms); return `${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
 const fullStamp = ms => { const d = new Date(ms); return `${localDay(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
-const line = (r, chars) => `[${stamp(r.at)}] ${r.author}: ${r.content.slice(0, chars)}`;
+
+// Shrink a message before it reaches the model: links and custom emoji carry few meaningful tokens.
+const compact = text => String(text ?? '')
+    .replace(/https?:\/\/\S+/g, '[連結]')
+    .replace(/<a?(:\w+:)\d+>/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// Compact transcript: a header per day, "HH:MM name: text", and one person's consecutive messages joined with " / ".
+function transcript(records, chars){
+    const lines = [];
+    let day = null, prev = null;
+    for(const r of records){
+        const [date, time] = stamp(r.at).split(' ');
+        if(date !== day){ lines.push(`【${date}】`); day = date; prev = null; }
+        const text = r.content.slice(0, chars);
+        if(prev && prev.author === r.author && r.at - prev.at <= MERGE_GAP) lines[lines.length - 1] += ` / ${text}`;
+        else lines.push(`${time} ${r.author}: ${text}`);
+        prev = r;
+    }
+    return lines;
+}
 
 // Tool definitions in a provider-neutral shape (JSON Schema parameters); provider adapters translate them.
 const TOOL_DEFINITIONS = [
     {
         name: 'channel_activity',
-        description: '查看這個頻道最近幾天的聊天統計（不含內容）：總則數、每天則數、最熱鬧的時段、發言最多的人。想知道最近聊了什麼時，先用這個了解概況，再決定要讀哪一段。',
+        description: '頻道最近幾天的統計（不含內容）：總則數、每天則數、最熱鬧時段、發言最多的人。先用這個看概況，再決定讀哪一段。',
         parameters: {
             type: 'object',
             properties: {days: {type: 'integer', minimum: 1, maximum: MAX_DAYS, description: '往回看幾天'}},
@@ -32,7 +56,7 @@ const TOOL_DEFINITIONS = [
     },
     {
         name: 'search_messages',
-        description: `讀取這個頻道某段時間的訊息，可以用發言者或關鍵字篩選。會回傳符合的總筆數；超過 limit 時平均抽樣回傳，可以縮小範圍再查。每則最多 ${SEARCH_CHARS} 字。`,
+        description: `讀某段時間的訊息，可用發言者或關鍵字篩選。回傳符合總數；超過 limit 時平均抽樣，可縮小範圍再查。`,
         parameters: {
             type: 'object',
             properties: {
@@ -40,14 +64,14 @@ const TOOL_DEFINITIONS = [
                 until: {type: 'string', description: '結束時間，格式同上；省略表示到現在'},
                 author: {type: 'string', description: '只看名字包含這段文字的發言者'},
                 keyword: {type: 'string', description: '只看包含這段文字的訊息'},
-                limit: {type: 'integer', minimum: 1, maximum: MAX_SEARCH_RESULTS, description: `最多回傳幾則（預設 30）`},
+                limit: {type: 'integer', minimum: 1, maximum: MAX_SEARCH_RESULTS, description: `最多幾則（預設 ${DEFAULT_SEARCH_RESULTS}）`},
             },
             required: ['since'],
         },
     },
     {
         name: 'summarize_period',
-        description: '取得這個頻道某段時間的對話摘要。訊息很多、想知道大家在聊什麼時使用。',
+        description: '某段時間的對話摘要。訊息很多、想知道大家聊了什麼時用。',
         parameters: {
             type: 'object',
             properties: {
@@ -83,7 +107,7 @@ async function loadHistory(channel, {beforeId, now, botId}){
             records.push({
                 at: m.createdTimestamp,
                 author: m.author.id === botId ? '愛麗絲' : (m.member?.displayName ?? m.author.username),
-                content: (m.author.id === botId ? m.content : m.cleanContent).slice(0, MAX_STORED_CHARS),
+                content: compact(m.author.id === botId ? m.content : m.cleanContent).slice(0, MAX_STORED_CHARS),
             });
             if(records.length >= MAX_HISTORY) break;
         }
@@ -136,11 +160,11 @@ const OLDEST_NOTE = `（只能查到最近 ${MAX_DAYS} 天、最多 ${MAX_HISTOR
 function searchMessages(records, input, now){
     const {error, records: matched} = selectRange(records, input, now);
     if(error) return error;
-    const limit = Math.min(Math.max(Math.trunc(Number(input.limit)) || 30, 1), MAX_SEARCH_RESULTS);
+    const limit = Math.min(Math.max(Math.trunc(Number(input.limit)) || DEFAULT_SEARCH_RESULTS, 1), MAX_SEARCH_RESULTS);
     if(matched.length === 0) return `沒有符合的訊息${OLDEST_NOTE}`;
     const shown = spread(matched, limit);
     const note = shown.length < matched.length ? `符合 ${matched.length} 則，平均抽樣顯示 ${shown.length} 則：` : `符合 ${matched.length} 則：`;
-    return [note, ...shown.map(r => line(r, SEARCH_CHARS))].join('\n');
+    return [note, ...transcript(shown, SEARCH_CHARS)].join('\n');
 }
 
 async function summarizePeriod(records, input, now, provider){
@@ -152,19 +176,21 @@ async function summarizePeriod(records, input, now, provider){
     const chunks = [];
     let current = [], size = 0;
     for(const r of matched){
-        const text = line(r, MAX_STORED_CHARS);
-        if(size + text.length > SUMMARY_CHUNK_CHARS && current.length > 0){ chunks.push(current); current = []; size = 0; }
-        current.push(text);
-        size += text.length + 1;
+        const length = r.author.length + r.content.length + 8;
+        if(size + length > SUMMARY_CHUNK_CHARS && current.length > 0){ chunks.push(current); current = []; size = 0; }
+        current.push(r);
+        size += length;
     }
     if(current.length > 0) chunks.push(current);
     const used = spread(chunks, MAX_SUMMARY_CHUNKS);
 
-    const summaries = await Promise.all(used.map(async chunk => {
-        const summary = await provider.generate({system: SUMMARY_PROMPT, messages: [{role: 'user', content: chunk.join('\n')}], maxTokens: 400});
+    // One call at a time: the account allows few requests per second.
+    const summaries = [];
+    for(const chunk of used){
+        const summary = await provider.generate({system: SUMMARY_PROMPT, messages: [{role: 'user', content: transcript(chunk, MAX_STORED_CHARS).join('\n')}], maxTokens: SUMMARY_TOKENS});
         const text = typeof summary === 'string' ? summary : (summary?.text ?? '');
-        return `${chunk[0].slice(1, 12)} 起：${text.trim()}`;
-    }));
+        summaries.push(`${stamp(chunk[0].at)} 起：${text.trim()}`);
+    }
     const header = used.length < chunks.length
         ? `共 ${matched.length} 則訊息，太多了，只摘要其中 ${used.length}/${chunks.length} 段：`
         : `共 ${matched.length} 則訊息的摘要：`;
@@ -188,4 +214,4 @@ function createHistoryTools({channel, beforeId, now, botId, provider}){
     };
 }
 
-module.exports = {TOOL_DEFINITIONS, createHistoryTools, parseTime, MAX_DAYS, MAX_HISTORY};
+module.exports = {TOOL_DEFINITIONS, createHistoryTools, parseTime, compact, transcript, MAX_DAYS, MAX_HISTORY};

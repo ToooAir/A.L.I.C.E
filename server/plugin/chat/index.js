@@ -5,14 +5,16 @@
 const path = require('node:path');
 const {SYSTEM_PROMPT, MEMORY_PROMPT, LINES} = require('./persona');
 const {localDay} = require('../activity');
-const {createHistoryTools} = require('./history');
+const {createHistoryTools, compact} = require('./history');
 
 const CONTEXT_WINDOW_MINUTES = 30; // earlier messages within this window are sent as context...
-const CONTEXT_MESSAGES = 30;       // ...up to this many
-const MAX_CONTEXT_CHARS = 500;     // per earlier message
-const MAX_PROMPT_CHARS = 1000;     // the message that mentions Alice
-const MAX_REPLY_TOKENS = 400;
-const MAX_TOOL_CALLS = 4;          // history lookups per chat
+const CONTEXT_MESSAGES = 20;       // ...up to this many
+const MAX_CONTEXT_CHARS = 300;     // per earlier message
+const MAX_PROMPT_CHARS = 600;      // the message that mentions Alice
+const MAX_REPLY_TOKENS = 300;
+const MAX_NOTES_TOKENS = 200;
+const MAX_TOOL_CALLS = 3;          // history lookups per chat
+const MIN_MEMORABLE_CHARS = 6;     // shorter messages ("嗨", "早安") don't trigger a memory update
 const MAX_NOTES_CHARS = 1000;      // chat_memory.notes column size
 const NO_NOTES = '（無）';
 const DISCORD_MESSAGE_LIMIT = 2000;
@@ -38,8 +40,10 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
     const isMentioned = message => message.mentions?.users?.has(botId());
     const speaker = m => m.member?.displayName ?? m.author.username;
     const toEntry = (m, limit) => m.author.id === botId()
-        ? {role: 'assistant', content: m.content.slice(0, limit)}
-        : {role: 'user', content: `[${clock(new Date(m.createdTimestamp))}] ${speaker(m)}: ${m.cleanContent.slice(0, limit)}`};
+        ? {role: 'assistant', content: compact(m.content).slice(0, limit)}
+        : {role: 'user', content: `[${clock(new Date(m.createdTimestamp))}] ${speaker(m)}: ${compact(m.cleanContent).slice(0, limit)}`};
+    // Whether the message says enough about the person to be worth a memory update.
+    const memorable = message => compact(message.cleanContent).replace(/@\S+/g, '').replace(/\s/g, '').length >= MIN_MEMORABLE_CHARS;
 
     // What the channel was talking about: recent messages, plus the message being replied to.
     async function gatherContext(message){
@@ -80,8 +84,8 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
     async function updateNotes(message, notes, reply){
         if(!memory) return;
         try {
-            const input = `舊筆記：\n${notes ?? NO_NOTES}\n\n最新對話：\n${speaker(message)}: ${message.cleanContent.slice(0, MAX_PROMPT_CHARS)}\n愛麗絲: ${reply}`;
-            const updated = asText(await provider.generate({system: MEMORY_PROMPT, messages: [{role: 'user', content: input}], maxTokens: MAX_REPLY_TOKENS})).trim();
+            const input = `舊筆記：\n${notes ?? NO_NOTES}\n\n最新對話：\n${speaker(message)}: ${compact(message.cleanContent).slice(0, MAX_PROMPT_CHARS)}\n愛麗絲: ${reply}`;
+            const updated = asText(await provider.generate({system: MEMORY_PROMPT, messages: [{role: 'user', content: input}], maxTokens: MAX_NOTES_TOKENS})).trim();
             // "Nothing worth noting" never wipes existing notes; members clear theirs with /chat forget.
             if(!updated || updated === NO_NOTES || updated === notes) return;
             await memory.save(message.guildId, message.author.id, updated.slice(0, MAX_NOTES_CHARS));
@@ -154,7 +158,7 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
             console.error('[chat]', error);
         }
         await send(message, reply || LINES.error);
-        if(reply) await updateNotes(message, notes, reply);
+        if(reply && memorable(message)) await updateNotes(message, notes, reply);
         return true;
     }
 
