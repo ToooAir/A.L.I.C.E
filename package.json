@@ -25,6 +25,6 @@
   },
   "homepage": "https://github.com/ToooAir/A.L.I.C.E#readme",
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }

@@ -44,7 +44,15 @@ function createChat({provider, botId, memory = null, dailyLimit = 100, cooldownS
     const lastUse = new Map(); // userId -> timestamp
     let usage = {day: null, count: 0};
 
-    const isMentioned = message => message.mentions?.users?.has(botId());
+    // Alice is addressed by a mention, by a reply to one of her messages (even with the ping turned off),
+    // or by mentioning her managed bot role, which Discord's autocomplete sometimes picks instead of the user.
+    function isMentioned(message){
+        const id = botId();
+        const mentions = message.mentions;
+        if(mentions?.users?.has(id) || mentions?.repliedUser?.id === id) return true;
+        const botRole = message.guild?.members?.me?.roles?.botRole;
+        return Boolean(botRole && mentions?.roles?.has(botRole.id));
+    }
     const speaker = nameOf;
     const toEntry = (m, limit) => m.author.id === botId()
         ? {role: 'assistant', content: compact(m.content).slice(0, limit)}

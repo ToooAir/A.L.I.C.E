@@ -310,3 +310,21 @@ test('name tags like [HSR] are dropped from speaker names', async () => {
     await chat.handle(mention(`<@${BOT_ID}> 今天過得如何`, {name: '伊織真名 [HSR]'}).message);
     assert.equal(provider.chatRequests()[0].messages[0].content, '[14:00] 伊織真名: @愛麗絲 今天過得如何');
 });
+
+test('replies to Alice and mentions of her bot role also count as talking to her', async () => {
+    const {chat, provider} = setup();
+    const withMentions = (mentions, extra = {}) => {
+        const {message} = mention('剛剛那句是什麼意思？', {mentionsAlice: false});
+        Object.assign(message.mentions, mentions);
+        return Object.assign(message, extra);
+    };
+
+    assert.equal(await chat.handle(withMentions({repliedUser: {id: BOT_ID}})), true, 'reply with the ping turned off');
+    const roles = new djs.Collection([['role-alice', {}]]);
+    const guild = {members: {me: {roles: {botRole: {id: 'role-alice'}}}}};
+    assert.equal(await chat.handle(withMentions({roles}, {guild})), true, 'bot role mention');
+
+    assert.equal(await chat.handle(withMentions({repliedUser: {id: '12'}})), false, 'reply to someone else');
+    assert.equal(await chat.handle(withMentions({roles: new djs.Collection([['other', {}]])}, {guild})), false, 'other role');
+    assert.equal(provider.chatRequests().length, 2);
+});

@@ -82,7 +82,7 @@
 - **@everyone 防護**：沒有「提及 @everyone」權限的人發出含 `@everyone` 的訊息會被自動刪除
 - **私下關心**：試著對愛麗絲說「我討厭你」🥺
 - **打招呼**：訊息裡有「嗨愛麗絲」就會回應
-- **聊天**（選用，預設關閉）：標記愛麗絲時，她會以《刀劍神域》愛麗絲的個性回話。需要在 `config.js` 設定 `chat`，並在 `server/plugin/chat/providers/` 放一個對應 LLM 服務的 provider（見該資料夾的 README）。個性設定在 `server/plugin/chat/persona.js`。她會參考同頻道最近 30 分鐘的對話，並記下對每個人的簡短印象（只存在資料庫的 `chat_memory`），成員可以用 `/chat memory` 查看、`/chat forget` 清除
+- **聊天**（選用，預設關閉）：標記愛麗絲（或她的身分組）、或回覆她的訊息時，她會以《刀劍神域》愛麗絲的個性回話。需要在 `config.js` 設定 `chat`，並在 `server/plugin/chat/providers/` 放一個對應 LLM 服務的 provider（見該資料夾的 README）。個性設定在 `server/plugin/chat/persona.js`。她會參考同頻道最近 30 分鐘的對話，並記下對每個人的簡短印象（只存在資料庫的 `chat_memory`），成員可以用 `/chat memory` 查看、`/chat forget` 清除
 - `/about` 顯示自我介紹與延遲
 
 ## 指令一覽
@@ -107,7 +107,7 @@
 
 ### 需求
 
-- Docker（或 Node.js 18 以上）
+- Docker（或 Node.js 22 以上）
 - MySQL（支援 MySQL 8）
 
 ### 1. 建立 Discord Bot
